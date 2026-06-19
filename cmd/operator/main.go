@@ -10,7 +10,6 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
-	"runtime"
 	"sync"
 	"syscall"
 	"time"
@@ -81,7 +80,7 @@ func run() (err error) {
 	controller := ctrl.NewController(ctrl.Params{
 		Client:      client,
 		Logger:      logger,
-		Concurrency: runtime.GOMAXPROCS(-1),
+		Concurrency: cfg.Concurrency,
 	})
 
 	chartCache := helm.ChartCache{
