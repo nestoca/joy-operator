@@ -64,6 +64,10 @@ spec:
             - name: HELM_REGISTRY_CREDENTIALS_PATH
               value: {{ .Values.helm.credentials.mountPath | quote }}
             {{- end }}
+            {{- with .Values.controller.concurrency }}
+            - name: CONCURRENCY
+              value: {{ . }}
+            {{- end }}
           volumeMounts:
             - name: helm-cache
               mountPath: /helm/cache
