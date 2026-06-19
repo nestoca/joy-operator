@@ -1,0 +1,104 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}
+  labels: 
+    {{- if .Values.commonLabels }}
+    {{- toYaml .Values.commonLabels | nindent 4 }}
+    {{- end }}
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      release: {{ .Release.Name }}
+  template:
+    metadata:
+      {{- with .Values.podAnnotations }}
+      annotations: {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- if .Values.commonLabels }}
+        {{- toYaml .Values.commonLabels | nindent 4 }}
+        {{- end }}
+        release: {{ .Release.Name }}
+    spec:
+      serviceAccountName: {{ .Release.Name }}
+      securityContext:
+        fsGroup: 65532
+      containers:
+        - name: main
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+            privileged: false
+            readOnlyRootFilesystem: true
+            runAsGroup: 65532
+            runAsNonRoot: true
+            runAsUser: 65532
+          image: '{{ .Values.image }}:{{ .Values.version }}'
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: health
+              containerPort: 3000
+              protocol: TCP
+          readinessProbe:
+            failureThreshold: 6
+            httpGet:
+              path: /ready
+              port: 3000
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            timeoutSeconds: 1
+          env:
+            - name: CHART_CACHE_DIR
+              value: /helm/cache
+            - name: ENV_DESTINATIONS
+              value: | {{- .Values.environmentDestinations | toJson | nindent 16 }}
+            {{- if .Values.helm.registry }}
+            - name: HELM_REGISTRY
+              value: {{ .Values.helm.registry | quote }}
+            - name: HELM_REGISTRY_CREDENTIALS_PATH
+              value: {{ .Values.helm.credentials.mountPath | quote }}
+            {{- end }}
+          volumeMounts:
+            - name: helm-cache
+              mountPath: /helm/cache
+            - name: helm-config
+              mountPath: /.config/helm
+            - name: tmp
+              mountPath: /tmp
+            {{- if .Values.helm.registry }}
+            - name: helm-credentials
+              mountPath: {{ .Values.helm.credentials.mountPath }}
+              subPath: {{ .Values.helm.credentials.key }}
+              readOnly: true
+            {{- end }}
+          resources: {{- toYaml .Values.resources | nindent 12 }}
+      volumes:
+        - name: helm-cache
+          emptyDir: {}
+        - name: helm-config
+          emptyDir: {}
+        - name: tmp
+          emptyDir: {}
+        {{- if .Values.helm.registry }}
+        - name: helm-credentials
+          secret:
+            secretName: {{ .Values.helm.credentials.secret }}
+            items:
+              - key: {{ .Values.helm.credentials.key }}
+                path: {{ .Values.helm.credentials.key }}
+        {{- end }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector: {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity: {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations: {{- toYaml . | nindent 8 }}
+      {{- end }}

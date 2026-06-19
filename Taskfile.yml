@@ -1,0 +1,15 @@
+# Ironically the task runner is itself a dev dependency of the project.
+# To install it run the following command:
+#
+# go install github.com/go-task/task/v3/cmd/task@latest
+
+version: '3'
+
+tasks:
+  fmt:
+    cmds:
+      - goimports -local github.com/nestoca/joy-operator -w .
+      - goimports -local github.com/nestoca/joy -w .
+      - goimports -local k8s.io -w .
+      - goimports -local github.com/yokecd/yoke -w .
+      - gofumpt -w .
