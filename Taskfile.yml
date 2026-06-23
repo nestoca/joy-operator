@@ -13,3 +13,6 @@ tasks:
       - goimports -local k8s.io -w .
       - goimports -local github.com/yokecd/yoke -w .
       - gofumpt -w .
+  crd-gen:
+    cmds:
+      - go run ./cmd/crd-gen > ./chart/templates/crds.yaml

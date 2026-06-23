@@ -8,7 +8,7 @@ spec:
   group: joy.nesto.ca
   names:
     kind: Release
-    listKind: Releases
+    listKind: ReleaseList
     plural: releases
     shortNames:
       - rel
@@ -66,7 +66,7 @@ spec:
   group: joy.nesto.ca
   names:
     kind: Environment
-    listKind: Environments
+    listKind: EnvironmentList
     plural: environments
     shortNames:
       - env
@@ -131,7 +131,7 @@ spec:
   group: joy.nesto.ca
   names:
     kind: Project
-    listKind: Projects
+    listKind: ProjectList
     plural: projects
     shortNames:
       - proj
@@ -173,6 +173,60 @@ spec:
               type: object
           required:
             - metadata
+            - spec
+          type: object
+      served: true
+      storage: true
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    helm.sh/resource-policy: keep
+  name: catalogs.joy.nesto.ca
+spec:
+  group: joy.nesto.ca
+  names:
+    kind: Catalog
+    listKind: CatalogList
+    plural: catalogs
+    shortNames:
+      - cat
+    singular: catalog
+  scope: Cluster
+  versions:
+    - name: v1alpha1
+      schema:
+        openAPIV3Schema:
+          properties:
+            spec:
+              properties:
+                chartRefs:
+                  additionalProperties:
+                    properties:
+                      mappings:
+                        type: object
+                        x-kubernetes-preserve-unknown-fields: true
+                      name:
+                        type: string
+                      repoUrl:
+                        type: string
+                      version:
+                        type: string
+                    required:
+                      - repoUrl
+                      - name
+                      - version
+                    type: object
+                  type: object
+                defaultChartRef:
+                  type: string
+                repoUrl:
+                  type: string
+              required:
+                - repoUrl
+              type: object
+          required:
             - spec
           type: object
       served: true
