@@ -110,7 +110,7 @@ func run() (err error) {
 		},
 		ctrl.Entry{
 			GroupKind: v1alpha1.CatalogGK,
-			Funcs:     ctrl.Funcs{},
+			Funcs:     CatalogReconciler(),
 		},
 	); err != nil {
 		return fmt.Errorf("failed to register reconcilers: %w", err)

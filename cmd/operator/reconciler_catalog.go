@@ -21,10 +21,10 @@ func CatalogReconciler() ctrl.Funcs {
 				return ctrl.Result{}, fmt.Errorf("failed to list cached environments: %w", err)
 			}
 
-			for _, envs := range envs {
+			for _, env := range envs {
 				ctrl.Inst(ctx).SendEvent(ctrl.Event{
-					Name:      envs.Name,
-					Namespace: envs.Namespace,
+					Name:      env.Name,
+					Namespace: env.Namespace,
 					GroupKind: v1alpha1.EnvironmentGK,
 				})
 			}
