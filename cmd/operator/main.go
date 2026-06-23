@@ -19,7 +19,6 @@ import (
 	"github.com/yokecd/yoke/pkg/k8s"
 	"github.com/yokecd/yoke/pkg/k8s/ctrl"
 
-	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
 
@@ -83,37 +82,35 @@ func run() (err error) {
 		Concurrency: cfg.Concurrency,
 	})
 
-	chartCache := helm.ChartCache{
-		Refs:            map[string]helm.Chart{},
-		DefaultChartRef: "",
-		Root:            cfg.ChartCacheDir,
-		Puller: helm.CLI{
-			IO: joy.IO{
-				Out: os.Stdout,
-				Err: os.Stderr,
-			},
-		},
-	}
-
 	if err := controller.Register(
 		ctrl.Entry{
-			GroupKind: schema.GroupKind{Group: "joy.nesto.ca", Kind: v1alpha1.KindEnvironment},
+			GroupKind: v1alpha1.EnvironmentGK,
 			Funcs:     EnvironmentReconciler(),
 		},
 		ctrl.Entry{
-			GroupKind: schema.GroupKind{Group: "joy.nesto.ca", Kind: v1alpha1.KindRelease},
+			GroupKind: v1alpha1.ReleaseGK,
 			Funcs: ReleaseReconciler(ReleaseReconcilerParams{
-				ChartCache:      chartCache,
+				ChartSource: ChartSource{
+					Root:   cfg.ChartCacheDir,
+					Puller: helm.CLI{IO: joy.IO{Out: os.Stdout, Err: os.Stderr}},
+				},
 				EnvDestinations: cfg.EnvDestinations,
+				DefaultCatalog:  cfg.DefaultCatalog,
 			}),
 		},
 		ctrl.Entry{
-			GroupKind: schema.GroupKind{Group: "joy.nesto.ca", Kind: v1alpha1.KindProject},
-			Funcs: ctrl.Funcs{Handler: func(ctx context.Context, e ctrl.Event) (ctrl.Result, error) {
-				// We do not want to do anything with projects other than have them stored in etcd.
-				// We attach a noop reconciler to the resource simply so that they can be available to other reconcilers via the informer cache.
-				return ctrl.Result{}, nil
-			}},
+			GroupKind: v1alpha1.ProjectGK,
+			Funcs: ctrl.Funcs{
+				Handler: func(ctx context.Context, e ctrl.Event) (ctrl.Result, error) {
+					// We do not want to do anything with projects other than have them stored in etcd.
+					// We attach a noop reconciler to the resource simply so that they can be available to other reconcilers via the informer cache.
+					return ctrl.Result{}, nil
+				},
+			},
+		},
+		ctrl.Entry{
+			GroupKind: v1alpha1.CatalogGK,
+			Funcs:     ctrl.Funcs{},
 		},
 	); err != nil {
 		return fmt.Errorf("failed to register reconcilers: %w", err)

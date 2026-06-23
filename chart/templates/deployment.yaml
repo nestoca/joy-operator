@@ -66,7 +66,15 @@ spec:
             {{- end }}
             {{- with .Values.controller.concurrency }}
             - name: CONCURRENCY
-              value: {{ . }}
+              value: {{ . | quote }}
+            {{- end }}
+            {{- if .Values.controller.pullMode }}
+            - name: PULL_MODE
+              value: "true"
+            {{- end }}
+            {{- with .Values.controller.defaultCatalog }}
+            - name: DEFAULT_CATALOG
+              value: {{ . | quote }}
             {{- end }}
           volumeMounts:
             - name: helm-cache
