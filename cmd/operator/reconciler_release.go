@@ -64,12 +64,12 @@ func ReleaseReconciler(params ReleaseReconcilerParams) ctrl.Funcs {
 
 			destination, ok := params.EnvDestinations[release.Environment.Name]
 			if !ok {
-				return ctrl.Result{}, ctrl.Terminal(fmt.Errorf("no app destination found for environment %s", release.Environment.Name))
+				return ctrl.Result{}, ctrl.Terminalf("no app destination found for environment %s", release.Environment.Name)
 			}
 
 			catalog, err := catalogCache.Get(params.DefaultCatalog)
 			if err != nil {
-				return ctrl.Result{}, ctrl.Terminal(fmt.Errorf("failed to get catalog: %w", err))
+				return ctrl.Result{}, ctrl.Terminalf("failed to get catalog: %w", err)
 			}
 
 			chartCache := helm.ChartCache{
@@ -86,12 +86,12 @@ func ReleaseReconciler(params ReleaseReconcilerParams) ctrl.Funcs {
 
 			values, err := joy.ComputeReleaseValues(release, chartFS)
 			if err != nil {
-				return ctrl.Result{}, ctrl.Terminal(fmt.Errorf("failed to compute release values: %w", err))
+				return ctrl.Result{}, ctrl.Terminalf("failed to compute release values: %w", err)
 			}
 
 			valuesBytes, err := yaml.Marshal(values)
 			if err != nil {
-				return ctrl.Result{}, ctrl.Terminal(fmt.Errorf("failed to marshal release values: %w", err))
+				return ctrl.Result{}, ctrl.Terminalf("failed to marshal release values: %w", err)
 			}
 
 			app := renderReleaseApplication(RenderApplicationParams{
