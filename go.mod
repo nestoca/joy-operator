@@ -5,7 +5,7 @@ go 1.26.4
 require (
 	github.com/davidmdm/conf v0.0.11
 	github.com/davidmdm/x/xcontext v0.0.4
-	github.com/nestoca/joy v0.89.1
+	github.com/nestoca/joy v0.90.2-0.20260623172119-327c53713ce8
 	github.com/yokecd/yoke v0.20.20
 	go.yaml.in/yaml/v3 v3.0.4
 	k8s.io/api v0.36.2
@@ -115,4 +115,3 @@ require (
 	sigs.k8s.io/yaml v1.6.0 // indirect
 )
 
-replace github.com/nestoca/joy => ../joy
