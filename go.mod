@@ -6,7 +6,7 @@ require (
 	github.com/davidmdm/conf v0.0.11
 	github.com/davidmdm/x/xcontext v0.0.4
 	github.com/nestoca/joy v0.89.1
-	github.com/yokecd/yoke v0.20.19
+	github.com/yokecd/yoke v0.20.20
 	go.yaml.in/yaml/v3 v3.0.4
 	k8s.io/api v0.36.2
 	k8s.io/apiextensions-apiserver v0.36.2
