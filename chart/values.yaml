@@ -35,5 +35,7 @@ affinity: {}
 
 controller: {}
   # concurrency: 8
+  # pullMode: true
+  # defaultCatalog: catalog
 
 environmentDestinations: {}

@@ -16,7 +16,7 @@ import (
 	"github.com/nestoca/joy/api/v1alpha1"
 )
 
-var releaseGK = schema.GroupKind{Group: "joy.nesto.ca", Kind: v1alpha1.KindRelease}
+var releaseGK = schema.GroupKind{Group: "joy.nesto.ca", Kind: v1alpha1.ReleaseKind}
 
 func EnvironmentReconciler() ctrl.Funcs {
 	return ctrl.Funcs{
@@ -49,7 +49,7 @@ func EnvironmentReconciler() ctrl.Funcs {
 					OwnerReferences: []metav1.OwnerReference{
 						{
 							APIVersion: "joy.nesto.ca/v1alpha1",
-							Kind:       v1alpha1.KindEnvironment,
+							Kind:       v1alpha1.EnvironmentKind,
 							Name:       env.Name,
 							UID:        env.UID,
 						},

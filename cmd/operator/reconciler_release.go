@@ -13,7 +13,6 @@ import (
 
 	kerrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime/schema"
 
 	"github.com/nestoca/joy/api/v1alpha1"
 	joy "github.com/nestoca/joy/pkg"
@@ -22,8 +21,14 @@ import (
 	"github.com/nestoca/joy-operator/cmd/operator/argocd"
 )
 
+type ChartSource struct {
+	Root   string
+	Puller helm.Puller
+}
+
 type ReleaseReconcilerParams struct {
-	ChartCache      helm.ChartCache
+	DefaultCatalog  string
+	ChartSource     ChartSource
 	EnvDestinations map[string]argocd.ApplicationDestination
 }
 
@@ -32,8 +37,9 @@ func ReleaseReconciler(params ReleaseReconcilerParams) ctrl.Funcs {
 		Handler: func(ctx context.Context, event ctrl.Event) (ctrl.Result, error) {
 			var (
 				releaseCache = ctrl.CacheFromEvent[v1alpha1.Release](ctx, event)
-				envCache     = ctrl.Cache[v1alpha1.Environment](ctx, schema.GroupKind{Group: "joy.nesto.ca", Kind: v1alpha1.KindEnvironment}, "")
-				projectCache = ctrl.Cache[v1alpha1.Project](ctx, schema.GroupKind{Group: "joy.nesto.ca", Kind: v1alpha1.KindProject}, "")
+				envCache     = ctrl.Cache[v1alpha1.Environment](ctx, v1alpha1.EnvironmentGK, "")
+				catalogCache = ctrl.Cache[v1alpha1.Catalog](ctx, v1alpha1.CatalogGK, "")
+				projectCache = ctrl.Cache[v1alpha1.Project](ctx, v1alpha1.ProjectGK, "")
 				client       = ctrl.Client(ctx)
 				appIntf      = k8s.TypedInterface[argocd.Application](client.Dynamic, argocd.ApplicationGVR).Namespace("argocd")
 			)
@@ -61,7 +67,19 @@ func ReleaseReconciler(params ReleaseReconcilerParams) ctrl.Funcs {
 				return ctrl.Result{}, ctrl.Terminal(fmt.Errorf("no app destination found for environment %s", release.Environment.Name))
 			}
 
-			chartFS, err := params.ChartCache.GetReleaseChartFS(ctx, release)
+			catalog, err := catalogCache.Get(params.DefaultCatalog)
+			if err != nil {
+				return ctrl.Result{}, ctrl.Terminal(fmt.Errorf("failed to get catalog: %w", err))
+			}
+
+			chartCache := helm.ChartCache{
+				Refs:            catalog.Spec.ChartRefs,
+				DefaultChartRef: catalog.Spec.DefaultChartRef,
+				Root:            params.ChartSource.Root,
+				Puller:          params.ChartSource.Puller,
+			}
+
+			chartFS, err := chartCache.GetReleaseChartFS(ctx, release)
 			if err != nil {
 				return ctrl.Result{}, fmt.Errorf("failed to get release chart filesystem: %w", err)
 			}
