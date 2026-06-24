@@ -11,9 +11,17 @@ import (
 	"github.com/nestoca/joy/api/v1alpha1"
 )
 
-func CatalogReconciler() ctrl.Funcs {
+type CatalogReconcilerParams struct {
+	CatalogName string
+}
+
+func CatalogReconciler(params CatalogReconcilerParams) ctrl.Funcs {
 	return ctrl.Funcs{
 		Handler: func(ctx context.Context, event ctrl.Event) (ctrl.Result, error) {
+			if event.Name != params.CatalogName {
+				return ctrl.Result{}, ctrl.Terminalf("unsupported catalog: wanted %q got %q", params.CatalogName, event.Name)
+			}
+
 			envCache := ctrl.Cache[v1alpha1.Environment](ctx, v1alpha1.EnvironmentGK, "")
 
 			envs, err := envCache.List(labels.Everything())

@@ -27,7 +27,7 @@ type ChartSource struct {
 }
 
 type ReleaseReconcilerParams struct {
-	DefaultCatalog  string
+	CatalogName     string
 	ChartSource     ChartSource
 	EnvDestinations map[string]argocd.ApplicationDestination
 }
@@ -67,7 +67,7 @@ func ReleaseReconciler(params ReleaseReconcilerParams) ctrl.Funcs {
 				return ctrl.Result{}, ctrl.Terminalf("no app destination found for environment %s", release.Environment.Name)
 			}
 
-			catalog, err := catalogCache.Get(params.DefaultCatalog)
+			catalog, err := catalogCache.Get(params.CatalogName)
 			if err != nil {
 				return ctrl.Result{}, ctrl.Terminalf("failed to get catalog: %w", err)
 			}

@@ -95,7 +95,7 @@ func run() (err error) {
 					Puller: helm.CLI{IO: joy.IO{Out: os.Stdout, Err: os.Stderr}},
 				},
 				EnvDestinations: cfg.EnvDestinations,
-				DefaultCatalog:  cfg.DefaultCatalog,
+				CatalogName:     cfg.DefaultCatalog,
 			}),
 		},
 		ctrl.Entry{
@@ -110,7 +110,7 @@ func run() (err error) {
 		},
 		ctrl.Entry{
 			GroupKind: v1alpha1.CatalogGK,
-			Funcs:     CatalogReconciler(),
+			Funcs:     CatalogReconciler(CatalogReconcilerParams{CatalogName: cfg.DefaultCatalog}),
 		},
 	); err != nil {
 		return fmt.Errorf("failed to register reconcilers: %w", err)
