@@ -85,7 +85,10 @@ func run() (err error) {
 	if err := controller.Register(
 		ctrl.Entry{
 			GroupKind: v1alpha1.EnvironmentGK,
-			Funcs:     EnvironmentReconciler(),
+			Funcs: EnvironmentReconciler(EnvironmentReconcilerParams{
+				CatalogName: cfg.DefaultCatalog,
+				Pull:        cfg.Pull,
+			}),
 		},
 		ctrl.Entry{
 			GroupKind: v1alpha1.ReleaseGK,
@@ -110,7 +113,10 @@ func run() (err error) {
 		},
 		ctrl.Entry{
 			GroupKind: v1alpha1.CatalogGK,
-			Funcs:     CatalogReconciler(CatalogReconcilerParams{CatalogName: cfg.DefaultCatalog}),
+			Funcs: CatalogReconciler(CatalogReconcilerParams{
+				CatalogName: cfg.DefaultCatalog,
+				Pull:        cfg.Pull,
+			}),
 		},
 	); err != nil {
 		return fmt.Errorf("failed to register reconcilers: %w", err)
