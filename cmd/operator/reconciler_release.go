@@ -41,7 +41,7 @@ func ReleaseReconciler(params ReleaseReconcilerParams) ctrl.Funcs {
 				catalogCache = ctrl.Cache[v1alpha1.Catalog](ctx, v1alpha1.CatalogGK, "")
 				projectCache = ctrl.Cache[v1alpha1.Project](ctx, v1alpha1.ProjectGK, "")
 				client       = ctrl.Client(ctx)
-				appIntf      = k8s.TypedInterface[argocd.Application](client.Dynamic, argocd.ApplicationGVR).Namespace("argocd")
+				appIntf      = k8s.TypedInterface[argocd.Application](client, argocd.ApplicationGVR).Namespace("argocd")
 			)
 
 			release, err := releaseCache.Get(event.Name)
@@ -73,8 +73,8 @@ func ReleaseReconciler(params ReleaseReconcilerParams) ctrl.Funcs {
 			}
 
 			chartCache := helm.ChartCache{
-				Refs:            catalog.Spec.ChartRefs,
-				DefaultChartRef: catalog.Spec.DefaultChartRef,
+				Refs:            catalog.Spec.Charts.Refs,
+				DefaultChartRef: catalog.Spec.Charts.Default,
 				Root:            params.ChartSource.Root,
 				Puller:          params.ChartSource.Puller,
 			}

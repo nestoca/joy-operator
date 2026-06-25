@@ -5,8 +5,8 @@ go 1.26.4
 require (
 	github.com/davidmdm/conf v0.0.11
 	github.com/davidmdm/x/xcontext v0.0.4
-	github.com/nestoca/joy v0.90.2-0.20260623172119-327c53713ce8
-	github.com/yokecd/yoke v0.20.20
+	github.com/nestoca/joy v0.90.2-0.20260625014727-28ef8797637d
+	github.com/yokecd/yoke v0.20.21
 	go.yaml.in/yaml/v3 v3.0.4
 	k8s.io/api v0.36.2
 	k8s.io/apiextensions-apiserver v0.36.2
@@ -114,4 +114,3 @@ require (
 	sigs.k8s.io/structured-merge-diff/v6 v6.3.2 // indirect
 	sigs.k8s.io/yaml v1.6.0 // indirect
 )
-

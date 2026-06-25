@@ -201,30 +201,39 @@ spec:
           properties:
             spec:
               properties:
-                chartRefs:
-                  additionalProperties:
-                    properties:
-                      mappings:
+                charts:
+                  properties:
+                    default:
+                      type: string
+                    refs:
+                      additionalProperties:
+                        properties:
+                          mappings:
+                            type: object
+                            x-kubernetes-preserve-unknown-fields: true
+                          name:
+                            type: string
+                          repoUrl:
+                            type: string
+                          version:
+                            type: string
+                        required:
+                          - repoUrl
+                          - name
+                          - version
                         type: object
-                        x-kubernetes-preserve-unknown-fields: true
-                      name:
-                        type: string
-                      repoUrl:
-                        type: string
-                      version:
-                        type: string
-                    required:
-                      - repoUrl
-                      - name
-                      - version
-                    type: object
+                      type: object
+                  required:
+                    - default
+                    - refs
                   type: object
-                defaultChartRef:
-                  type: string
                 repoUrl:
+                  type: string
+                revision:
                   type: string
               required:
                 - repoUrl
+                - revision
               type: object
           required:
             - spec

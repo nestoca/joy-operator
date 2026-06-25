@@ -29,11 +29,11 @@ func EnvironmentReconciler(params EnvironmentReconcilerParams) ctrl.Funcs {
 				client       = ctrl.Client(ctx)
 				envCache     = ctrl.CacheFromEvent[v1alpha1.Environment](ctx, event)
 				catalogCache = ctrl.Cache[v1alpha1.Catalog](ctx, v1alpha1.CatalogGK, "")
-				nsIntf       = k8s.TypedInterface[corev1.Namespace](client.Dynamic, schema.GroupVersionResource{
+				nsIntf       = k8s.TypedInterface[corev1.Namespace](client, schema.GroupVersionResource{
 					Version:  "v1",
 					Resource: "namespaces",
 				})
-				appIntf = k8s.TypedInterface[argocd.Application](client.Dynamic, argocd.ApplicationGVR).Namespace("argocd")
+				appIntf = k8s.TypedInterface[argocd.Application](client, argocd.ApplicationGVR).Namespace("argocd")
 			)
 
 			env, err := envCache.Get(event.Name)
