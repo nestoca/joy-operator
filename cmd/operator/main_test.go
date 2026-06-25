@@ -43,7 +43,7 @@ func TestMain(m *testing.M) {
 		),
 	)
 
-	crdIntf := k8s.TypedInterface[apiextensionsv1.CustomResourceDefinition](client.Dynamic, schema.GroupVersionResource{
+	crdIntf := k8s.TypedInterface[apiextensionsv1.CustomResourceDefinition](client, schema.GroupVersionResource{
 		Group:    "apiextensions.k8s.io",
 		Version:  "v1",
 		Resource: "customresourcedefinitions",
@@ -57,8 +57,9 @@ func TestMain(m *testing.M) {
 	}))
 
 	values := map[string]any{
-		"image":   joyOperator,
-		"version": "test",
+		"image":      joyOperator,
+		"version":    "test",
+		"controller": map[string]any{"pullMode": true},
 		"environmentDestinations": map[string]any{
 			"staging": map[string]any{
 				"server":    "https://kubernetes.default.svc",

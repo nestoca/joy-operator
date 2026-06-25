@@ -30,7 +30,7 @@ func CatalogReconciler(params CatalogReconcilerParams) ctrl.Funcs {
 			var (
 				catalogCache = ctrl.CacheFromEvent[v1alpha1.Catalog](ctx, event)
 				envCache     = ctrl.Cache[v1alpha1.Environment](ctx, v1alpha1.EnvironmentGK, "")
-				appIntf      = k8s.TypedInterface[argocd.Application](ctrl.Client(ctx).Dynamic, argocd.ApplicationGVR).Namespace("argocd")
+				appIntf      = k8s.TypedInterface[argocd.Application](ctrl.Client(ctx), argocd.ApplicationGVR).Namespace("argocd")
 			)
 
 			catalog, err := catalogCache.Get(event.Name)
@@ -54,7 +54,7 @@ func CatalogReconciler(params CatalogReconcilerParams) ctrl.Funcs {
 							Project: "default",
 							Source: argocd.ApplicationSource{
 								RepoURL:        catalog.Spec.RepoURL,
-								TargetRevision: "master",
+								TargetRevision: catalog.Spec.Revision,
 								Directory:      argocd.SourceDirectory{Include: "environments/*/env.yaml"},
 							},
 							Destination: argocd.ApplicationDestination{

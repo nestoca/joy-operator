@@ -3,3 +3,4 @@ Taskfile.yml
 README.md
 .github/
 .git/
+*_test.go
