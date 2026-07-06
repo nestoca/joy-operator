@@ -25,16 +25,8 @@ type EnvironmentReconcilerParams struct {
 func EnvironmentReconciler(params EnvironmentReconcilerParams) ctrl.Funcs {
 	return ctrl.Funcs{
 		Handler: func(ctx context.Context, event ctrl.Event) (ctrl.Result, error) {
-			var (
-				client       = ctrl.Client(ctx)
-				envCache     = ctrl.CacheFromEvent[v1alpha1.Environment](ctx, event)
-				catalogCache = ctrl.Cache[v1alpha1.Catalog](ctx, v1alpha1.CatalogGK, "")
-				nsIntf       = k8s.TypedInterface[corev1.Namespace](client, schema.GroupVersionResource{
-					Version:  "v1",
-					Resource: "namespaces",
-				})
-				appIntf = k8s.TypedInterface[argocd.Application](client, argocd.ApplicationGVR).Namespace("argocd")
-			)
+			client := ctrl.Client(ctx)
+			envCache := ctrl.CacheFromEvent[v1alpha1.Environment](ctx, event)
 
 			env, err := envCache.Get(event.Name)
 			if err != nil {
@@ -43,6 +35,8 @@ func EnvironmentReconciler(params EnvironmentReconcilerParams) ctrl.Funcs {
 				}
 				return ctrl.Result{}, err
 			}
+
+			catalogCache := ctrl.Cache[v1alpha1.Catalog](ctx, v1alpha1.CatalogGK, "")
 
 			catalog, err := catalogCache.Get(params.CatalogName)
 			if err != nil {
@@ -68,9 +62,16 @@ func EnvironmentReconciler(params EnvironmentReconcilerParams) ctrl.Funcs {
 				},
 			}
 
+			nsIntf := k8s.TypedInterface[corev1.Namespace](client, schema.GroupVersionResource{
+				Version:  "v1",
+				Resource: "namespaces",
+			})
+
 			if _, err = nsIntf.Apply(ctx, ns, metav1.ApplyOptions{FieldManager: joyOperator}); err != nil {
 				return ctrl.Result{}, fmt.Errorf("failed to apply namespace: %w", err)
 			}
+
+			appIntf := k8s.TypedInterface[argocd.Application](client, argocd.ApplicationGVR).Namespace("argocd")
 
 			if params.Pull {
 				if _, err := appIntf.Apply(
@@ -88,7 +89,7 @@ func EnvironmentReconciler(params EnvironmentReconcilerParams) ctrl.Funcs {
 							Project: "default",
 							Source: argocd.ApplicationSource{
 								RepoURL:        catalog.Spec.RepoURL,
-								TargetRevision: "master",
+								TargetRevision: catalog.Spec.Revision,
 								Directory: argocd.SourceDirectory{
 									Include: fmt.Sprintf("environments/%s/releases", env.Name),
 									Recurse: true,

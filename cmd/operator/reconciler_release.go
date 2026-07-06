@@ -35,14 +35,7 @@ type ReleaseReconcilerParams struct {
 func ReleaseReconciler(params ReleaseReconcilerParams) ctrl.Funcs {
 	return ctrl.Funcs{
 		Handler: func(ctx context.Context, event ctrl.Event) (ctrl.Result, error) {
-			var (
-				releaseCache = ctrl.CacheFromEvent[v1alpha1.Release](ctx, event)
-				envCache     = ctrl.Cache[v1alpha1.Environment](ctx, v1alpha1.EnvironmentGK, "")
-				catalogCache = ctrl.Cache[v1alpha1.Catalog](ctx, v1alpha1.CatalogGK, "")
-				projectCache = ctrl.Cache[v1alpha1.Project](ctx, v1alpha1.ProjectGK, "")
-				client       = ctrl.Client(ctx)
-				appIntf      = k8s.TypedInterface[argocd.Application](client, argocd.ApplicationGVR).Namespace("argocd")
-			)
+			releaseCache := ctrl.CacheFromEvent[v1alpha1.Release](ctx, event)
 
 			release, err := releaseCache.Get(event.Name)
 			if err != nil {
@@ -52,10 +45,13 @@ func ReleaseReconciler(params ReleaseReconcilerParams) ctrl.Funcs {
 				return ctrl.Result{}, fmt.Errorf("failed to get release: %w", err)
 			}
 
+			envCache := ctrl.Cache[v1alpha1.Environment](ctx, v1alpha1.EnvironmentGK, "")
 			release.Environment, err = envCache.Get(release.Namespace)
 			if err != nil {
 				return ctrl.Result{}, fmt.Errorf("failed to get environment: %w", err)
 			}
+
+			projectCache := ctrl.Cache[v1alpha1.Project](ctx, v1alpha1.ProjectGK, "")
 
 			release.Project, err = projectCache.Get(release.Spec.Project)
 			if err != nil {
@@ -66,6 +62,8 @@ func ReleaseReconciler(params ReleaseReconcilerParams) ctrl.Funcs {
 			if !ok {
 				return ctrl.Result{}, ctrl.Terminalf("no app destination found for environment %s", release.Environment.Name)
 			}
+
+			catalogCache := ctrl.Cache[v1alpha1.Catalog](ctx, v1alpha1.CatalogGK, "")
 
 			catalog, err := catalogCache.Get(params.CatalogName)
 			if err != nil {
@@ -101,7 +99,9 @@ func ReleaseReconciler(params ReleaseReconcilerParams) ctrl.Funcs {
 				Chart:       chartFS.Chart,
 			})
 
-			if _, err = appIntf.Apply(ctx, &app, metav1.ApplyOptions{FieldManager: joyOperator}); err != nil {
+			appIntf := k8s.TypedInterface[argocd.Application](ctrl.Client(ctx), argocd.ApplicationGVR).Namespace("argocd")
+
+			if _, err := appIntf.Apply(ctx, &app, metav1.ApplyOptions{FieldManager: joyOperator}); err != nil {
 				return ctrl.Result{}, fmt.Errorf("failed to apply application: %w", err)
 			}
 
