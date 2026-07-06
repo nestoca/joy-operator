@@ -27,16 +27,14 @@ func CatalogReconciler(params CatalogReconcilerParams) ctrl.Funcs {
 				return ctrl.Result{}, ctrl.Terminalf("unsupported catalog: wanted %q got %q", params.CatalogName, event.Name)
 			}
 
-			var (
-				catalogCache = ctrl.CacheFromEvent[v1alpha1.Catalog](ctx, event)
-				envCache     = ctrl.Cache[v1alpha1.Environment](ctx, v1alpha1.EnvironmentGK, "")
-				appIntf      = k8s.TypedInterface[argocd.Application](ctrl.Client(ctx), argocd.ApplicationGVR).Namespace("argocd")
-			)
+			catalogCache := ctrl.CacheFromEvent[v1alpha1.Catalog](ctx, event)
 
 			catalog, err := catalogCache.Get(event.Name)
 			if err != nil {
 				return ctrl.Result{}, fmt.Errorf("failed to get catalog: %w", err)
 			}
+
+			appIntf := k8s.TypedInterface[argocd.Application](ctrl.Client(ctx), argocd.ApplicationGVR).Namespace("argocd")
 
 			if params.Pull {
 				if _, err := appIntf.Apply(
@@ -71,6 +69,8 @@ func CatalogReconciler(params CatalogReconcilerParams) ctrl.Funcs {
 					return ctrl.Result{}, fmt.Errorf("failed to delete application: %w", err)
 				}
 			}
+
+			envCache := ctrl.Cache[v1alpha1.Environment](ctx, v1alpha1.EnvironmentGK, "")
 
 			envs, err := envCache.List(labels.Everything())
 			if err != nil {

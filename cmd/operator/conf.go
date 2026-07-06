@@ -11,7 +11,7 @@ import (
 )
 
 type Config struct {
-	DefaultCatalog  string
+	CatalogName     string
 	ChartCacheDir   string
 	EnvDestinations map[string]argocd.ApplicationDestination
 	HelmLogin       HelmLogin
@@ -36,7 +36,7 @@ func GetConfig() (Config, error) {
 	conf.Var(conf.Environ, &cfg.ChartCacheDir, "CHART_CACHE_DIR", conf.RequiredNonEmpty[string]())
 	conf.Var(conf.Environ, &cfg.Concurrency, "CONCURRENCY", conf.Default(defaultConcurrency))
 	conf.Var(conf.Environ, &cfg.Pull, "PULL_MODE")
-	conf.Var(conf.Environ, &cfg.DefaultCatalog, "DEFAULT_CATALOG", conf.Default("catalog"))
+	conf.Var(conf.Environ, &cfg.CatalogName, "DEFAULT_CATALOG", conf.Default("catalog"))
 
 	if err := conf.Environ.Parse(); err != nil {
 		return cfg, fmt.Errorf("failed to parse environment: %w", err)

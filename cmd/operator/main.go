@@ -86,7 +86,7 @@ func run() (err error) {
 		ctrl.Entry{
 			GroupKind: v1alpha1.EnvironmentGK,
 			Funcs: EnvironmentReconciler(EnvironmentReconcilerParams{
-				CatalogName: cfg.DefaultCatalog,
+				CatalogName: cfg.CatalogName,
 				Pull:        cfg.Pull,
 			}),
 		},
@@ -98,7 +98,7 @@ func run() (err error) {
 					Puller: helm.CLI{IO: joy.IO{Out: os.Stdout, Err: os.Stderr}},
 				},
 				EnvDestinations: cfg.EnvDestinations,
-				CatalogName:     cfg.DefaultCatalog,
+				CatalogName:     cfg.CatalogName,
 			}),
 		},
 		ctrl.Entry{
@@ -114,7 +114,7 @@ func run() (err error) {
 		ctrl.Entry{
 			GroupKind: v1alpha1.CatalogGK,
 			Funcs: CatalogReconciler(CatalogReconcilerParams{
-				CatalogName: cfg.DefaultCatalog,
+				CatalogName: cfg.CatalogName,
 				Pull:        cfg.Pull,
 			}),
 		},
