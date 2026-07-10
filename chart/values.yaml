@@ -2,11 +2,11 @@ image: oci://ghcr.io/joy-operator
 version: latest
 
 helm:
-  registry: ''
+  registry: ""
   credentials:
-    secret: ''
-    key: ''
-    mountPath: ''
+    secret: ""
+    key: ""
+    mountPath: ""
 
 commonLabels: {}
 
@@ -39,3 +39,8 @@ controller: {}
   # defaultCatalog: catalog
 
 environmentDestinations: {}
+
+# Glob pattern to match source environment files
+# Uses glob syntax from https://github.com/gobwas/glob
+# To specify multiple specific environments, use something like `environments/{dev,demo}/env.yaml`
+environmentSourcePattern: "environments/*/env.yaml"

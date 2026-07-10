@@ -11,12 +11,13 @@ import (
 )
 
 type Config struct {
-	CatalogName     string
-	ChartCacheDir   string
-	EnvDestinations map[string]argocd.ApplicationDestination
-	HelmLogin       HelmLogin
-	Concurrency     int
-	Pull            bool
+	CatalogName      string
+	ChartCacheDir    string
+	EnvDestinations  map[string]argocd.ApplicationDestination
+	EnvSourcePattern string
+	HelmLogin        HelmLogin
+	Concurrency      int
+	Pull             bool
 }
 
 type HelmLogin struct {
@@ -31,6 +32,7 @@ func GetConfig() (Config, error) {
 	var cfg Config
 
 	conf.Var(conf.Environ, &cfg.EnvDestinations, "ENV_DESTINATIONS", conf.JSON[map[string]argocd.ApplicationDestination])
+	conf.Var(conf.Environ, &cfg.EnvSourcePattern, "ENV_SOURCE_PATTERN", conf.Default("environments/*/env.yaml"))
 	conf.Var(conf.Environ, &cfg.HelmLogin.Registry, "HELM_REGISTRY")
 	conf.Var(conf.Environ, &cfg.HelmLogin.CredentialsPath, "HELM_REGISTRY_CREDENTIALS_PATH")
 	conf.Var(conf.Environ, &cfg.ChartCacheDir, "CHART_CACHE_DIR", conf.RequiredNonEmpty[string]())

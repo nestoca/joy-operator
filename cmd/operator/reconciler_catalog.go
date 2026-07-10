@@ -16,8 +16,9 @@ import (
 )
 
 type CatalogReconcilerParams struct {
-	CatalogName string
-	Pull        bool
+	CatalogName      string
+	Pull             bool
+	EnvSourcePattern string
 }
 
 func CatalogReconciler(params CatalogReconcilerParams) ctrl.Funcs {
@@ -53,7 +54,7 @@ func CatalogReconciler(params CatalogReconcilerParams) ctrl.Funcs {
 							Source: argocd.ApplicationSource{
 								RepoURL:        catalog.Spec.RepoURL,
 								TargetRevision: catalog.Spec.Revision,
-								Directory:      argocd.SourceDirectory{Include: "environments/*/env.yaml"},
+								Directory:      argocd.SourceDirectory{Include: params.EnvSourcePattern},
 							},
 							Destination: argocd.ApplicationDestination{
 								Server: "http://kubernetes.svc.local",
