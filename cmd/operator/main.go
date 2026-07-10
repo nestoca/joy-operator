@@ -114,8 +114,9 @@ func run() (err error) {
 		ctrl.Entry{
 			GroupKind: v1alpha1.CatalogGK,
 			Funcs: CatalogReconciler(CatalogReconcilerParams{
-				CatalogName: cfg.CatalogName,
-				Pull:        cfg.Pull,
+				CatalogName:      cfg.CatalogName,
+				EnvSourcePattern: cfg.EnvSourcePattern,
+				Pull:             cfg.Pull,
 			}),
 		},
 	); err != nil {

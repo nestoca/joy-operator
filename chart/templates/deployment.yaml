@@ -58,6 +58,8 @@ spec:
               value: /helm/cache
             - name: ENV_DESTINATIONS
               value: | {{- .Values.environmentDestinations | toJson | nindent 16 }}
+            - name: ENV_SOURCE_PATTERN
+              value: {{ .Values.environmentSourcePattern | quote }}
             {{- if .Values.helm.registry }}
             - name: HELM_REGISTRY
               value: {{ .Values.helm.registry | quote }}
