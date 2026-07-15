@@ -152,8 +152,8 @@ github.com/monochromegane/go-gitignore v0.0.0-20200626010858-205db1a8cc00 h1:n6/
 github.com/monochromegane/go-gitignore v0.0.0-20200626010858-205db1a8cc00/go.mod h1:Pm3mSP3c5uWn86xMLZ5Sa7JB9GsEZySvHYXCTK4E9q4=
 github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 h1:C3w9PqII01/Oq1c1nUAm88MOHcQC9l5mIlSMApZMrHA=
 github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822/go.mod h1:+n7T8mK8HuQTcFwEeznm/DIxMOiR9yIdICNftLE1DvQ=
-github.com/nestoca/joy v0.92.0 h1:m5UrRUcY4I1KnJjvXZzy281l5g8hm8QNaTILwbH/Uq0=
-github.com/nestoca/joy v0.92.0/go.mod h1:daMJaOYyGCONHO5ORCh20gcxUYQ8pi8kuy4zIgcgaLc=
+github.com/nestoca/joy v0.93.0 h1:O4l7qYvcyBPBey7/DTAcdnzy4TDhXSekQ9xC8ggdCfY=
+github.com/nestoca/joy v0.93.0/go.mod h1:daMJaOYyGCONHO5ORCh20gcxUYQ8pi8kuy4zIgcgaLc=
 github.com/nestoca/survey/v2 v2.0.0 h1:orM/TXtBSQJCPiZy9N51hcwH0WzFjQJ7TQKCfMTnGoQ=
 github.com/nestoca/survey/v2 v2.0.0/go.mod h1:QfmcQfCRtqsiBpePFhHEW0MY9QH7lSpw3CQinsdC/dc=
 github.com/opencontainers/go-digest v1.0.0 h1:apOUWs51W5PlhuyGyz9FCeeBIOUDA/6nW8Oi/yOhh5U=

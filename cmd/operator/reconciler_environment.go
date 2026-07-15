@@ -44,21 +44,10 @@ func EnvironmentReconciler(params EnvironmentReconcilerParams) ctrl.Funcs {
 			}
 
 			ns := &corev1.Namespace{
-				TypeMeta: metav1.TypeMeta{
-					APIVersion: "v1",
-					Kind:       "Namespace",
-				},
+				TypeMeta: metav1.TypeMeta{APIVersion: "v1", Kind: "Namespace"},
 				ObjectMeta: metav1.ObjectMeta{
 					Name:   env.Name,
 					Labels: map[string]string{"nesto.ca/env": env.Name},
-					OwnerReferences: []metav1.OwnerReference{
-						{
-							APIVersion: "joy.nesto.ca/v1alpha1",
-							Kind:       v1alpha1.EnvironmentKind,
-							Name:       env.Name,
-							UID:        env.UID,
-						},
-					},
 				},
 			}
 

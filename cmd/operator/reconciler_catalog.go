@@ -32,6 +32,9 @@ func CatalogReconciler(params CatalogReconcilerParams) ctrl.Funcs {
 
 			catalog, err := catalogCache.Get(event.Name)
 			if err != nil {
+				if kerrors.IsNotFound(err) {
+					return ctrl.Result{}, nil
+				}
 				return ctrl.Result{}, fmt.Errorf("failed to get catalog: %w", err)
 			}
 

@@ -91,6 +91,9 @@ spec:
               subPath: {{ .Values.helm.credentials.key }}
               readOnly: true
             {{- end }}
+            {{- with .Values.extraVolumeMounts }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
           resources: {{- toYaml .Values.resources | nindent 12 }}
       volumes:
         - name: helm-cache
@@ -106,6 +109,9 @@ spec:
             items:
               - key: {{ .Values.helm.credentials.key }}
                 path: {{ .Values.helm.credentials.key }}
+        {{- end }}
+        {{- with .Values.extraVolumes }}
+        {{- toYaml . | nindent 8 }}
         {{- end }}
       {{- with .Values.nodeSelector }}
       nodeSelector: {{- toYaml . | nindent 8 }}
