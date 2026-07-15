@@ -1,0 +1,136 @@
+name: Build & Publish
+
+on:
+  push:
+    branches: [master]
+    # The release commit below edits these files; ignore them so it doesn't
+    # trigger another run of this workflow.
+    paths-ignore:
+      - chart/Chart.yaml
+      - CHANGELOG.md
+  pull_request:
+    branches: [master]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+
+jobs:
+  # Render the chart against the cases in chart/tests and diff against expected.yaml.
+  test-chart:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v6
+      - uses: silphid/actions/test-chart@v1
+        with:
+          work-dir: chart
+          args: --namespace my-namespace --release my-release --app-version 1.0.0 --chart-version 1.0.0
+
+  # These are end-to-end tests: they docker-build the operator, create a kind
+  # cluster, and helm-install the chart. So the runner needs kind and helm.
+  test-app:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-go@v6
+        with:
+          go-version-file: go.mod
+          cache: true
+      - name: Install helm
+        run: curl -fsSL https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+      - name: Install kind
+        run: |
+          curl -Lo ./kind https://kind.sigs.k8s.io/dl/v0.30.0/kind-linux-amd64
+          chmod +x ./kind && sudo mv ./kind /usr/local/bin/kind
+      - name: Run tests
+        run: go test -race ./...
+
+  # Publish only happens on master, and only once the tests above pass.
+  publish:
+    if: github.ref == 'refs/heads/master'
+    needs: [test-chart, test-app]
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write # push the release commit + tag
+      packages: write # push the image and chart to ghcr.io
+    steps:
+      - name: Install helm
+        run: curl -fsSL https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+      - name: Install yq
+        run: |
+          curl -Lo ./yq https://github.com/mikefarah/yq/releases/download/v4.34.2/yq_linux_amd64
+          chmod +x ./yq && sudo mv ./yq /usr/local/bin/yq
+
+      # The default GITHUB_TOKEN can't push to the protected master branch, and
+      # pushes made with it don't trigger further workflows. This app token can.
+      - name: Get Joy CI token
+        id: token
+        uses: actions/create-github-app-token@v3
+        with:
+          app-id: ${{ vars.JOY_CI_ACTIONS_APP_ID }}
+          private-key: ${{ secrets.JOY_CI_ACTIONS_APP_PRIVATE_KEY }}
+          owner: nestoca
+
+      - uses: actions/checkout@v6
+        with:
+          token: ${{ steps.token.outputs.token }}
+          fetch-depth: 0 # full history, so the changelog can find the previous tag
+
+      # Work out the next version from the conventional-commit messages since the
+      # last tag, and prepend the new entries to CHANGELOG.md. If there's nothing
+      # to release, outputs.skipped is 'true' and every step below is skipped.
+      - name: Determine version & changelog
+        id: release
+        uses: TriPSs/conventional-changelog-action@v5
+        with:
+          input-file: CHANGELOG.md
+          output-file: CHANGELOG.md
+          fallback-version: 0.0.0
+          skip-commit: true
+          skip-version-file: true
+          git-push: false
+
+      - name: Log in to ghcr.io
+        if: steps.release.outputs.skipped == 'false'
+        uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ github.token }}
+
+      - name: Build & push image → ghcr.io/nestoca/joy-operator
+        if: steps.release.outputs.skipped == 'false'
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          push: true
+          tags: |
+            ghcr.io/nestoca/joy-operator:latest
+            ghcr.io/nestoca/joy-operator:${{ steps.release.outputs.version }}
+
+      - name: Package & push chart → ghcr.io/nestoca/joy-operator-chart
+        if: steps.release.outputs.skipped == 'false'
+        run: |
+          yq -i '.version = "${{ steps.release.outputs.version }}"' chart/Chart.yaml
+          yq -i '.appVersion = "${{ steps.release.outputs.version }}"' chart/Chart.yaml
+          helm package chart
+          # helm push appends the chart name, giving ghcr.io/nestoca/joy-operator-chart
+          helm push joy-operator-chart-${{ steps.release.outputs.version }}.tgz oci://ghcr.io/nestoca
+
+      - name: Commit, tag & push the release
+        if: steps.release.outputs.skipped == 'false'
+        run: |
+          git config user.name "GitHub Actions"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add CHANGELOG.md chart/Chart.yaml
+          git commit -m "chore(release): ${{ steps.release.outputs.tag }}"
+          git tag ${{ steps.release.outputs.tag }}
+          git push origin master --follow-tags
+
+      - name: Create GitHub release
+        if: steps.release.outputs.skipped == 'false'
+        uses: ncipollo/release-action@v1
+        with:
+          tag: ${{ steps.release.outputs.tag }}
+          name: ${{ steps.release.outputs.tag }}
+          body: ${{ steps.release.outputs.clean_changelog }}
+          token: ${{ github.token }}

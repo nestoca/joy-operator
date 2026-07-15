@@ -1,5 +1,5 @@
 ---
-# Source: chart/templates/crds.yaml
+# Source: joy-operator-chart/templates/crds.yaml
 apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
@@ -232,7 +232,7 @@ spec:
       served: true
       storage: true
 ---
-# Source: chart/templates/deployment.yaml
+# Source: joy-operator-chart/templates/deployment.yaml
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -259,7 +259,7 @@ spec:
                 {}
             - name: ENV_SOURCE_PATTERN
               value: environments/*/env.yaml
-          image: oci://ghcr.io/joy-operator:latest
+          image: ghcr.io/nestoca/joy-operator:latest
           imagePullPolicy: IfNotPresent
           name: main
           ports:
@@ -303,7 +303,7 @@ spec:
         - emptyDir: {}
           name: tmp
 ---
-# Source: chart/templates/rbac.yaml
+# Source: joy-operator-chart/templates/rbac.yaml
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
@@ -536,7 +536,7 @@ subjects:
     name: my-release
     namespace: my-namespace
 ---
-# Source: chart/templates/service.yaml
+# Source: joy-operator-chart/templates/service.yaml
 apiVersion: v1
 kind: Service
 metadata:
@@ -552,7 +552,7 @@ spec:
     release: my-release
   type: ClusterIP
 ---
-# Source: chart/templates/serviceaccount.yaml
+# Source: joy-operator-chart/templates/serviceaccount.yaml
 apiVersion: v1
 kind: ServiceAccount
 metadata:
