@@ -2,11 +2,11 @@ image: oci://ghcr.io/joy-operator
 version: latest
 
 helm:
-  registry: ""
+  registry: ''
   credentials:
-    secret: ""
-    key: ""
-    mountPath: ""
+    secret: ''
+    key: ''
+    mountPath: ''
 
 commonLabels: {}
 
@@ -33,6 +33,19 @@ nodeSelector: {}
 tolerations: []
 affinity: {}
 
+# Arbitrary volumes appended to the deployment pod spec, with their
+# corresponding mounts on the main container. Primarily intended for testing,
+# e.g. mounting a local chart directory into the operator.
+extraVolumes: []
+  # - name: local-chart
+  #   hostPath:
+  #     path: /path/to/local/chart
+  #     type: Directory
+extraVolumeMounts: []
+  # - name: local-chart
+  #   mountPath: /charts/local-chart
+  #   readOnly: true
+
 controller: {}
   # concurrency: 8
   # pullMode: true
@@ -43,4 +56,4 @@ environmentDestinations: {}
 # Glob pattern to match source environment files
 # Uses glob syntax from https://github.com/gobwas/glob
 # To specify multiple specific environments, use something like `environments/{dev,demo}/env.yaml`
-environmentSourcePattern: "environments/*/env.yaml"
+environmentSourcePattern: 'environments/*/env.yaml'

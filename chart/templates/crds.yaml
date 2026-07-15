@@ -49,9 +49,6 @@ spec:
                 version:
                   type: string
               type: object
-          required:
-            - metadata
-            - spec
           type: object
       served: true
       storage: true
@@ -111,12 +108,7 @@ spec:
                 values:
                   type: object
                   x-kubernetes-preserve-unknown-fields: true
-              required:
-                - promotion
               type: object
-          required:
-            - metadata
-            - spec
           type: object
       served: true
       storage: true
@@ -171,9 +163,6 @@ spec:
                 skipPreReleaseCheck:
                   type: boolean
               type: object
-          required:
-            - metadata
-            - spec
           type: object
       served: true
       storage: true
