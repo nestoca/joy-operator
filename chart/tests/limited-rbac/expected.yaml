@@ -1,0 +1,560 @@
+---
+# Source: chart/templates/crds.yaml
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    helm.sh/resource-policy: keep
+  name: releases.joy.nesto.ca
+spec:
+  group: joy.nesto.ca
+  names:
+    kind: Release
+    listKind: ReleaseList
+    plural: releases
+    shortNames:
+      - rel
+    singular: release
+  scope: Namespaced
+  versions:
+    - name: v1alpha1
+      schema:
+        openAPIV3Schema:
+          properties:
+            spec:
+              properties:
+                chart:
+                  properties:
+                    mappings:
+                      type: object
+                      x-kubernetes-preserve-unknown-fields: true
+                    name:
+                      type: string
+                    ref:
+                      type: string
+                    repoUrl:
+                      type: string
+                    version:
+                      type: string
+                  type: object
+                links:
+                  additionalProperties:
+                    type: string
+                  type: object
+                namespace:
+                  type: string
+                project:
+                  type: string
+                values:
+                  type: object
+                  x-kubernetes-preserve-unknown-fields: true
+                version:
+                  type: string
+              type: object
+          type: object
+      served: true
+      storage: true
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    helm.sh/resource-policy: keep
+  name: environments.joy.nesto.ca
+spec:
+  group: joy.nesto.ca
+  names:
+    kind: Environment
+    listKind: EnvironmentList
+    plural: environments
+    shortNames:
+      - env
+    singular: environment
+  scope: Cluster
+  versions:
+    - name: v1alpha1
+      schema:
+        openAPIV3Schema:
+          properties:
+            spec:
+              properties:
+                chartVersions:
+                  additionalProperties:
+                    type: string
+                  type: object
+                cluster:
+                  type: string
+                namespace:
+                  type: string
+                order:
+                  type: integer
+                organization:
+                  type: string
+                owners:
+                  items:
+                    type: string
+                  type: array
+                promotion:
+                  properties:
+                    allowAutoMerge:
+                      type: boolean
+                    fromEnvironments:
+                      items:
+                        type: string
+                      type: array
+                    fromPullRequests:
+                      type: boolean
+                  type: object
+                sealedSecretsCert:
+                  type: string
+                values:
+                  type: object
+                  x-kubernetes-preserve-unknown-fields: true
+              type: object
+          type: object
+      served: true
+      storage: true
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    helm.sh/resource-policy: keep
+  name: projects.joy.nesto.ca
+spec:
+  group: joy.nesto.ca
+  names:
+    kind: Project
+    listKind: ProjectList
+    plural: projects
+    shortNames:
+      - proj
+    singular: project
+  scope: Cluster
+  versions:
+    - name: v1alpha1
+      schema:
+        openAPIV3Schema:
+          properties:
+            spec:
+              properties:
+                gitTagTemplate:
+                  type: string
+                links:
+                  additionalProperties:
+                    type: string
+                  type: object
+                owners:
+                  items:
+                    type: string
+                  type: array
+                releaseLinks:
+                  additionalProperties:
+                    type: string
+                  type: object
+                repository:
+                  type: string
+                repositorySubpaths:
+                  items:
+                    type: string
+                  type: array
+                reviewers:
+                  items:
+                    type: string
+                  type: array
+                skipPreReleaseCheck:
+                  type: boolean
+              type: object
+          type: object
+      served: true
+      storage: true
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    helm.sh/resource-policy: keep
+  name: catalogs.joy.nesto.ca
+spec:
+  group: joy.nesto.ca
+  names:
+    kind: Catalog
+    listKind: CatalogList
+    plural: catalogs
+    shortNames:
+      - cat
+    singular: catalog
+  scope: Cluster
+  versions:
+    - name: v1alpha1
+      schema:
+        openAPIV3Schema:
+          properties:
+            spec:
+              properties:
+                charts:
+                  properties:
+                    default:
+                      type: string
+                    refs:
+                      additionalProperties:
+                        properties:
+                          mappings:
+                            type: object
+                            x-kubernetes-preserve-unknown-fields: true
+                          name:
+                            type: string
+                          repoUrl:
+                            type: string
+                          version:
+                            type: string
+                        required:
+                          - repoUrl
+                          - name
+                          - version
+                        type: object
+                      type: object
+                  required:
+                    - default
+                    - refs
+                  type: object
+                repoUrl:
+                  type: string
+                revision:
+                  type: string
+              required:
+                - repoUrl
+                - revision
+              type: object
+          required:
+            - spec
+          type: object
+      served: true
+      storage: true
+---
+# Source: chart/templates/deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels: null
+  name: my-release
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      release: my-release
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        release: my-release
+    spec:
+      containers:
+        - env:
+            - name: CHART_CACHE_DIR
+              value: /helm/cache
+            - name: ENV_DESTINATIONS
+              value: |
+                {}
+            - name: ENV_SOURCE_PATTERN
+              value: environments/*/env.yaml
+          image: oci://ghcr.io/joy-operator:latest
+          imagePullPolicy: IfNotPresent
+          name: main
+          ports:
+            - containerPort: 3000
+              name: health
+              protocol: TCP
+          readinessProbe:
+            failureThreshold: 6
+            httpGet:
+              path: /ready
+              port: 3000
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            timeoutSeconds: 1
+          resources: {}
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+            privileged: false
+            readOnlyRootFilesystem: true
+            runAsGroup: 65532
+            runAsNonRoot: true
+            runAsUser: 65532
+          volumeMounts:
+            - mountPath: /helm/cache
+              name: helm-cache
+            - mountPath: /.config/helm
+              name: helm-config
+            - mountPath: /tmp
+              name: tmp
+      securityContext:
+        fsGroup: 65532
+      serviceAccountName: my-release
+      volumes:
+        - emptyDir: {}
+          name: helm-cache
+        - emptyDir: {}
+          name: helm-config
+        - emptyDir: {}
+          name: tmp
+---
+# Source: chart/templates/rbac.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels: null
+  name: my-release-environments
+rules:
+  - apiGroups:
+      - joy.nesto.ca
+    resources:
+      - environments
+    verbs:
+      - get
+      - list
+      - watch
+      - update
+      - patch
+      - delete
+  - apiGroups:
+      - joy.nesto.ca
+    resources:
+      - environments/status
+      - environments/finalizers
+    verbs:
+      - get
+      - update
+      - patch
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels: null
+  name: my-release-projects
+rules:
+  - apiGroups:
+      - joy.nesto.ca
+    resources:
+      - projects
+    verbs:
+      - get
+      - list
+      - watch
+      - update
+      - patch
+      - delete
+  - apiGroups:
+      - joy.nesto.ca
+    resources:
+      - projects/status
+      - projects/finalizers
+    verbs:
+      - get
+      - update
+      - patch
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels: null
+  name: my-release-catalogs
+rules:
+  - apiGroups:
+      - joy.nesto.ca
+    resources:
+      - catalogs
+    verbs:
+      - get
+      - list
+      - watch
+      - update
+      - patch
+      - delete
+  - apiGroups:
+      - joy.nesto.ca
+    resources:
+      - catalogs/status
+      - catalogs/finalizers
+    verbs:
+      - get
+      - update
+      - patch
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels: null
+  name: my-release-releases
+rules:
+  - apiGroups:
+      - joy.nesto.ca
+    resources:
+      - releases
+    verbs:
+      - get
+      - list
+      - watch
+      - update
+      - patch
+      - delete
+  - apiGroups:
+      - joy.nesto.ca
+    resources:
+      - releases/status
+      - releases/finalizers
+    verbs:
+      - get
+      - update
+      - patch
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels: null
+  name: my-release-namespaces
+rules:
+  - apiGroups:
+      - ""
+    resources:
+      - namespaces
+    verbs:
+      - get
+      - list
+      - watch
+      - create
+      - update
+      - patch
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  labels: null
+  name: my-release-environments
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: my-release-environments
+subjects:
+  - kind: ServiceAccount
+    name: my-release
+    namespace: my-namespace
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  labels: null
+  name: my-release-projects
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: my-release-projects
+subjects:
+  - kind: ServiceAccount
+    name: my-release
+    namespace: my-namespace
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  labels: null
+  name: my-release-catalogs
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: my-release-catalogs
+subjects:
+  - kind: ServiceAccount
+    name: my-release
+    namespace: my-namespace
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  labels: null
+  name: my-release-namespaces
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: my-release-namespaces
+subjects:
+  - kind: ServiceAccount
+    name: my-release
+    namespace: my-namespace
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  labels: null
+  name: my-release-applications
+  namespace: argocd
+rules:
+  - apiGroups:
+      - argoproj.io
+    resources:
+      - applications
+    verbs:
+      - get
+      - list
+      - watch
+      - create
+      - update
+      - patch
+      - delete
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  labels: null
+  name: my-release-releases
+  namespace: staging
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: my-release-releases
+subjects:
+  - kind: ServiceAccount
+    name: my-release
+    namespace: my-namespace
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  labels: null
+  name: my-release-applications
+  namespace: argocd
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: my-release-applications
+subjects:
+  - kind: ServiceAccount
+    name: my-release
+    namespace: my-namespace
+---
+# Source: chart/templates/service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  labels: null
+  name: my-release
+spec:
+  ports:
+    - name: health
+      port: 3000
+      protocol: TCP
+      targetPort: health
+  selector:
+    release: my-release
+  type: ClusterIP
+---
+# Source: chart/templates/serviceaccount.yaml
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  labels: null
+  name: my-release

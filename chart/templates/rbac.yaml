@@ -1,3 +1,4 @@
+{{- $values := .Values -}}
 {{- $release := .Release.Name -}}
 {{- $releaseNamespace := .Release.Namespace -}}
 
@@ -8,8 +9,8 @@ kind: ClusterRole
 metadata:
   name: {{ $release }}-environments
   labels:
-    {{- if .Values.commonLabels }}
-    {{- toYaml .Values.commonLabels | nindent 4 }}
+    {{- if $values.commonLabels }}
+    {{- toYaml $values.commonLabels | nindent 4 }}
     {{- end }}
 rules:
   - apiGroups: ["joy.nesto.ca"]
@@ -24,8 +25,8 @@ kind: ClusterRoleBinding
 metadata:
   name: {{ $release }}-environments
   labels:
-    {{- if .Values.commonLabels }}
-    {{- toYaml .Values.commonLabels | nindent 4 }}
+    {{- if $values.commonLabels }}
+    {{- toYaml $values.commonLabels | nindent 4 }}
     {{- end }}
 roleRef:
   apiGroup: rbac.authorization.k8s.io
@@ -42,8 +43,8 @@ kind: ClusterRole
 metadata:
   name: {{ $release }}-projects
   labels:
-    {{- if .Values.commonLabels }}
-    {{- toYaml .Values.commonLabels | nindent 4 }}
+    {{- if $values.commonLabels }}
+    {{- toYaml $values.commonLabels | nindent 4 }}
     {{- end }}
 rules:
   - apiGroups: ["joy.nesto.ca"]
@@ -58,8 +59,8 @@ kind: ClusterRoleBinding
 metadata:
   name: {{ $release }}-projects
   labels:
-    {{- if .Values.commonLabels }}
-    {{- toYaml .Values.commonLabels | nindent 4 }}
+    {{- if $values.commonLabels }}
+    {{- toYaml $values.commonLabels | nindent 4 }}
     {{- end }}
 roleRef:
   apiGroup: rbac.authorization.k8s.io
@@ -76,8 +77,8 @@ kind: ClusterRole
 metadata:
   name: {{ $release }}-catalogs
   labels:
-    {{- if .Values.commonLabels }}
-    {{- toYaml .Values.commonLabels | nindent 4 }}
+    {{- if $values.commonLabels }}
+    {{- toYaml $values.commonLabels | nindent 4 }}
     {{- end }}
 rules:
   - apiGroups: ["joy.nesto.ca"]
@@ -92,8 +93,8 @@ kind: ClusterRoleBinding
 metadata:
   name: {{ $release }}-catalogs
   labels:
-    {{- if .Values.commonLabels }}
-    {{- toYaml .Values.commonLabels | nindent 4 }}
+    {{- if $values.commonLabels }}
+    {{- toYaml $values.commonLabels | nindent 4 }}
     {{- end }}
 roleRef:
   apiGroup: rbac.authorization.k8s.io
@@ -105,15 +106,15 @@ subjects:
     namespace: {{ $releaseNamespace }}
 ---
 # Releases can be reconciled cluster-wide (default) or restricted to a list of
-# namespaces via .Values.rbac.releases.namespaces. The ClusterRole is reused
+# namespaces via $values.rbac.releases.namespaces. The ClusterRole is reused
 # in either case; only the binding shape changes.
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
   name: {{ $release }}-releases
   labels:
-    {{- if .Values.commonLabels }}
-    {{- toYaml .Values.commonLabels | nindent 4 }}
+    {{- if $values.commonLabels }}
+    {{- toYaml $values.commonLabels | nindent 4 }}
     {{- end }}
 rules:
   - apiGroups: ["joy.nesto.ca"]
@@ -122,15 +123,15 @@ rules:
   - apiGroups: ["joy.nesto.ca"]
     resources: ["releases/status", "releases/finalizers"]
     verbs: ["get", "update", "patch"]
-{{- if not .Values.rbac.releases.namespaces }}
+{{- if not $values.rbac.releases.namespaces }}
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
   name: {{ $release }}-releases
   labels:
-    {{- if .Values.commonLabels }}
-    {{- toYaml .Values.commonLabels | nindent 4 }}
+    {{- if $values.commonLabels }}
+    {{- toYaml $values.commonLabels | nindent 4 }}
     {{- end }}
 roleRef:
   apiGroup: rbac.authorization.k8s.io
@@ -141,7 +142,7 @@ subjects:
     name: {{ $release }}
     namespace: {{ $releaseNamespace }}
 {{- else }}
-{{- range $ns := .Values.rbac.releases.namespaces }}
+{{- range $ns := $values.rbac.releases.namespaces }}
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
@@ -149,8 +150,8 @@ metadata:
   name: {{ $release }}-releases
   namespace: {{ $ns }}
   labels:
-    {{- if .Values.commonLabels }}
-    {{- toYaml .Values.commonLabels | nindent 4 }}
+    {{- if $values.commonLabels }}
+    {{- toYaml $values.commonLabels | nindent 4 }}
     {{- end }}
 roleRef:
   apiGroup: rbac.authorization.k8s.io
@@ -169,8 +170,8 @@ kind: ClusterRole
 metadata:
   name: {{ $release }}-namespaces
   labels:
-    {{- if .Values.commonLabels }}
-    {{- toYaml .Values.commonLabels | nindent 4 }}
+    {{- if $values.commonLabels }}
+    {{- toYaml $values.commonLabels | nindent 4 }}
     {{- end }}
 rules:
   - apiGroups: [""]
@@ -182,8 +183,8 @@ kind: ClusterRoleBinding
 metadata:
   name: {{ $release }}-namespaces
   labels:
-    {{- if .Values.commonLabels }}
-    {{- toYaml .Values.commonLabels | nindent 4 }}
+    {{- if $values.commonLabels }}
+    {{- toYaml $values.commonLabels | nindent 4 }}
     {{- end }}
 roleRef:
   apiGroup: rbac.authorization.k8s.io
@@ -202,8 +203,8 @@ metadata:
   name: {{ $release }}-applications
   namespace: argocd
   labels:
-    {{- if .Values.commonLabels }}
-    {{- toYaml .Values.commonLabels | nindent 4 }}
+    {{- if $values.commonLabels }}
+    {{- toYaml $values.commonLabels | nindent 4 }}
     {{- end }}
 rules:
   - apiGroups: ["argoproj.io"]
@@ -216,8 +217,8 @@ metadata:
   name: {{ $release }}-applications
   namespace: argocd
   labels:
-    {{- if .Values.commonLabels }}
-    {{- toYaml .Values.commonLabels | nindent 4 }}
+    {{- if $values.commonLabels }}
+    {{- toYaml $values.commonLabels | nindent 4 }}
     {{- end }}
 roleRef:
   apiGroup: rbac.authorization.k8s.io
