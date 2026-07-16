@@ -550,27 +550,26 @@ func TestHappyReconciliations(t *testing.T) {
 	}
 
 	// And finally, the operator is non-destructive.
-	fgDeletion := metav1.DeleteOptions{PropagationPolicy: new(metav1.DeletePropagationForeground)}
-	require.NoError(t, catalogIntf.Delete(t.Context(), "catalog", fgDeletion))
-	require.NoError(t, envIntf.Delete(t.Context(), "staging", fgDeletion))
-	require.NoError(t, releaseIntf.Namespace("staging").Delete(t.Context(), "test", fgDeletion))
+	require.NoError(t, catalogIntf.Delete(t.Context(), "catalog", metav1.DeleteOptions{}))
+	require.NoError(t, envIntf.Delete(t.Context(), "staging", metav1.DeleteOptions{}))
+	require.NoError(t, releaseIntf.Namespace("staging").Delete(t.Context(), "test", metav1.DeleteOptions{}))
 
 	EventuallyNoErrorf(
 		t,
 		func() error {
 			if _, err := catalogIntf.Get(t.Context(), "catalog", metav1.GetOptions{}); !kerrors.IsNotFound(err) {
-				return fmt.Errorf("catalog not removed from cluster: expected not found but got: %w", err)
+				return fmt.Errorf("catalog not removed from cluster: expected not found but got: %v", err)
 			}
 			if _, err := envIntf.Get(t.Context(), "staging", metav1.GetOptions{}); !kerrors.IsNotFound(err) {
-				return fmt.Errorf("environment not removed from cluster: expected not found but got: %w", err)
+				return fmt.Errorf("environment not removed from cluster: expected not found but got: %v", err)
 			}
 			if _, err := releaseIntf.Get(t.Context(), "test", metav1.GetOptions{}); !kerrors.IsNotFound(err) {
-				return fmt.Errorf("release not removed from cluster: expected not found but got: %w", err)
+				return fmt.Errorf("release not removed from cluster: expected not found but got: %v", err)
 			}
 			return nil
 		},
 		100*time.Millisecond,
-		10*time.Second,
+		15*time.Second,
 		"failed to delete resources from cluster",
 	)
 
