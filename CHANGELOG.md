@@ -1,3 +1,12 @@
+## [0.0.2](https://github.com/nestoca/joy-operator/compare/v0.0.1...v0.0.2) (2026-07-16)
+
+
+### Bug Fixes
+
+* **PL-6290:** explicitly push tags ([52b18a9](https://github.com/nestoca/joy-operator/commit/52b18a9e846b09630ae4eb880fd8785fa79a7a7c))
+
+
+
 ## 0.0.1 (2026-07-16)
 
 
