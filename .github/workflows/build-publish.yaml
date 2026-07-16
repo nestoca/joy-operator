@@ -42,7 +42,7 @@ jobs:
           curl -Lo ./kind https://kind.sigs.k8s.io/dl/v0.30.0/kind-linux-amd64
           chmod +x ./kind && sudo mv ./kind /usr/local/bin/kind
       - name: Run tests
-        run: go test -race ./...
+        run: go test -v -timeout 10m ./...
 
   # Publish only happens on master, and only once the tests above pass.
   publish:
@@ -80,7 +80,7 @@ jobs:
       # to release, outputs.skipped is 'true' and every step below is skipped.
       - name: Determine version & changelog
         id: release
-        uses: TriPSs/conventional-changelog-action@v5
+        uses: TriPSs/conventional-changelog-action@3c4970b6573374889b897403d2f1278c395ea0df
         with:
           input-file: CHANGELOG.md
           output-file: CHANGELOG.md
@@ -125,12 +125,3 @@ jobs:
           git commit -m "chore(release): ${{ steps.release.outputs.tag }}"
           git tag ${{ steps.release.outputs.tag }}
           git push origin master --follow-tags
-
-      - name: Create GitHub release
-        if: steps.release.outputs.skipped == 'false'
-        uses: ncipollo/release-action@v1
-        with:
-          tag: ${{ steps.release.outputs.tag }}
-          name: ${{ steps.release.outputs.tag }}
-          body: ${{ steps.release.outputs.clean_changelog }}
-          token: ${{ github.token }}
