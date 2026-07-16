@@ -84,7 +84,7 @@ jobs:
         with:
           input-file: CHANGELOG.md
           output-file: CHANGELOG.md
-          fallback-version: 0.0.0
+          fallback-version: 0.0.1
           skip-commit: true
           skip-version-file: true
           git-push: false
@@ -123,5 +123,5 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add CHANGELOG.md chart/Chart.yaml
           git commit -m "chore(release): ${{ steps.release.outputs.tag }}"
-          git tag ${{ steps.release.outputs.tag }}
+          git tag -f ${{ steps.release.outputs.tag }}
           git push origin master --follow-tags
