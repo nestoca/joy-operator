@@ -1,4 +1,0 @@
-rbac:
-  releases:
-    namespaces:
-      - staging

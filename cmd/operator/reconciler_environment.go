@@ -79,6 +79,7 @@ func EnvironmentReconciler(params EnvironmentReconcilerParams) ctrl.Funcs {
 							Source: argocd.ApplicationSource{
 								RepoURL:        catalog.Spec.RepoURL,
 								TargetRevision: catalog.Spec.Revision,
+								Path:           "./",
 								Directory: argocd.SourceDirectory{
 									Include: fmt.Sprintf("environments/%s/releases", env.Name),
 									Recurse: true,

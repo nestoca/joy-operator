@@ -33,6 +33,7 @@ type ApplicationSpec struct {
 type ApplicationSource struct {
 	RepoURL        string          `json:"repoURL"`
 	TargetRevision string          `json:"targetRevision"`
+	Path           string          `json:"path"`
 	Chart          string          `json:"chart"`
 	Helm           SourceHelm      `json:"helm"`
 	Directory      SourceDirectory `json:"directory,omitzero"`

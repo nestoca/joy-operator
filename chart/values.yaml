@@ -10,17 +10,6 @@ helm:
 
 commonLabels: {}
 
-# RBAC settings. The operator needs:
-#   - cluster-wide access to environments.joy.nesto.ca (cluster-scoped CRD)
-#   - access to applications.argoproj.io in the argocd namespace
-#   - access to releases.joy.nesto.ca across configured namespaces
-rbac:
-  releases:
-    # Namespaces in which the operator may manage releases.joy.nesto.ca.
-    # Empty list = cluster-wide (ClusterRoleBinding). Otherwise one RoleBinding
-    # is created per namespace listed.
-    namespaces: []
-
 resources: {}
   # limits:
   #   cpu: 200m
