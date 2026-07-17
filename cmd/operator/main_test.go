@@ -381,7 +381,7 @@ func TestHappyReconciliations(t *testing.T) {
 				},
 				app.Spec.Source,
 			)
-			require.Equal(t, argocd.ApplicationDestination{Server: "https://kubernetes.svc.local"}, app.Spec.Destination)
+			require.Equal(t, argocd.ApplicationDestination{Server: "https://kubernetes.default.svc"}, app.Spec.Destination)
 		},
 		"staging": func(t *testing.T, app *argocd.Application) {
 			require.Equal(t, "argocd", app.Namespace)
@@ -402,7 +402,7 @@ func TestHappyReconciliations(t *testing.T) {
 			require.Equal(
 				t,
 				argocd.ApplicationDestination{
-					Server:    "https://kubernetes.svc.local",
+					Server:    "https://kubernetes.default.svc",
 					Namespace: "staging",
 				},
 				app.Spec.Destination,
