@@ -1,3 +1,12 @@
+## [0.0.10](https://github.com/nestoca/joy-operator/compare/v0.0.9...v0.0.10) (2026-07-17)
+
+
+### Bug Fixes
+
+* **PL-6888:** use recurse for catalog app of apps ([5dafe0e](https://github.com/nestoca/joy-operator/commit/5dafe0e4c6c9459ecaf83a267eca62550b97fed7))
+
+
+
 ## [0.0.9](https://github.com/nestoca/joy-operator/compare/v0.0.8...v0.0.9) (2026-07-17)
 
 
