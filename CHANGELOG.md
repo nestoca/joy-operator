@@ -1,3 +1,12 @@
+## [0.0.8](https://github.com/nestoca/joy-operator/compare/v0.0.7...v0.0.8) (2026-07-17)
+
+
+### Bug Fixes
+
+* **PL-6888:** fix struct tags for applicationSource ([86d28f8](https://github.com/nestoca/joy-operator/commit/86d28f85e985d19e6c3d99014416791ef8bce9d1))
+
+
+
 ## [0.0.7](https://github.com/nestoca/joy-operator/compare/v0.0.6...v0.0.7) (2026-07-17)
 
 
