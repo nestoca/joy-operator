@@ -86,7 +86,7 @@ func EnvironmentReconciler(params EnvironmentReconcilerParams) ctrl.Funcs {
 								},
 							},
 							Destination: argocd.ApplicationDestination{
-								Server:    "http://kubernetes.svc.local",
+								Server:    "https://kubernetes.svc.local",
 								Namespace: ns.Name,
 							},
 						},

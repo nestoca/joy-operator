@@ -61,7 +61,7 @@ func CatalogReconciler(params CatalogReconcilerParams) ctrl.Funcs {
 								Directory:      argocd.SourceDirectory{Include: params.EnvSourcePattern},
 							},
 							Destination: argocd.ApplicationDestination{
-								Server: "http://kubernetes.svc.local",
+								Server: "https://kubernetes.svc.local",
 							},
 						},
 					},
