@@ -1,3 +1,12 @@
+## [0.0.6](https://github.com/nestoca/joy-operator/compare/v0.0.5...v0.0.6) (2026-07-17)
+
+
+### Bug Fixes
+
+* **PL-6888:** fix chart common labels ([3f27543](https://github.com/nestoca/joy-operator/commit/3f275436afa061cd669d2ecea7c0a19e3c1487fd))
+
+
+
 ## [0.0.5](https://github.com/nestoca/joy-operator/compare/v0.0.4...v0.0.5) (2026-07-17)
 
 
