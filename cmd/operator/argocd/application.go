@@ -60,7 +60,7 @@ type ApplicationDestination struct {
 
 type SyncPolicy struct {
 	Automated   *SyncPolicyAutomated `json:"automated,omitzero"`
-	SyncOptions []string             `json:"syncOptions"`
+	SyncOptions []string             `json:"syncOptions,omitempty"`
 	Retry       SyncPolicyRetry      `json:"retry,omitzero" `
 }
 
