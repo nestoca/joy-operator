@@ -49,8 +49,9 @@ func CatalogReconciler(params CatalogReconcilerParams) ctrl.Funcs {
 							Kind:       "Application",
 						},
 						ObjectMeta: metav1.ObjectMeta{
-							Name:      event.Name,
-							Namespace: "argocd",
+							Name:       event.Name,
+							Namespace:  "argocd",
+							Finalizers: []string{"resources-finalizer.argocd.argoproj.io"},
 						},
 						Spec: argocd.ApplicationSpec{
 							Project: "default",
@@ -63,9 +64,12 @@ func CatalogReconciler(params CatalogReconcilerParams) ctrl.Funcs {
 							Destination: argocd.ApplicationDestination{
 								Server: "https://kubernetes.default.svc",
 							},
+							SyncPolicy: argocd.SyncPolicy{
+								Automated: &argocd.SyncPolicyAutomated{},
+							},
 						},
 					},
-					metav1.ApplyOptions{FieldManager: joyOperator},
+					metav1.ApplyOptions{FieldManager: joyOperator, Force: true},
 				); err != nil {
 					return ctrl.Result{}, fmt.Errorf("failed to apply application: %w", err)
 				}

@@ -54,14 +54,14 @@ type SourceDirectory struct {
 }
 
 type ApplicationDestination struct {
-	Server    string `json:"server"`
-	Namespace string `json:"namespace"`
+	Server    string `json:"server,omitempty"`
+	Namespace string `json:"namespace,omitempty"`
 }
 
 type SyncPolicy struct {
-	Automated   SyncPolicyAutomated `json:"automated,omitzero"`
-	SyncOptions []string            `json:"syncOptions"`
-	Retry       SyncPolicyRetry     `json:"retry,omitzero" `
+	Automated   *SyncPolicyAutomated `json:"automated,omitzero"`
+	SyncOptions []string             `json:"syncOptions"`
+	Retry       SyncPolicyRetry      `json:"retry,omitzero" `
 }
 
 type SyncPolicyAutomated struct {
