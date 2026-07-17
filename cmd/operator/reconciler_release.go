@@ -183,12 +183,12 @@ func renderReleaseApplication(params RenderApplicationParams) argocd.Application
 			SyncPolicy: argocd.SyncPolicy{
 				SyncOptions: []string{"CreateNamespace=true"},
 				Automated: func() argocd.SyncPolicyAutomated {
-					if params.Release.Annotations["argocd.nesto.ca/sync.enabled"] != "true" {
+					if enabled, ok := params.Release.Annotations["argocd.nesto.ca/sync.enabled"]; ok && enabled != "true" {
 						return argocd.SyncPolicyAutomated{}
 					}
 					return argocd.SyncPolicyAutomated{
-						Prune:    new(params.Release.Annotations["argocd.nesto.ca/sync.prune"] == "true"),
-						SelfHeal: new(params.Release.Annotations["argocd.nesto.ca/sync.heal"] == "true"),
+						Prune:    new(ValueEqualsOr(params.Release.Annotations, "argocd.nesto.ca/sync.prune", "true", true)),
+						SelfHeal: new(ValueEqualsOr(params.Release.Annotations, "argocd.nesto.ca/sync.heal", "true", true)),
 					}
 				}(),
 			},
@@ -205,4 +205,12 @@ func renderReleaseApplication(params RenderApplicationParams) argocd.Application
 			Destination: params.Destination,
 		},
 	}
+}
+
+func ValueEqualsOr(m map[string]string, key, expected string, fallback bool) bool {
+	actual, ok := m[key]
+	if !ok {
+		return fallback
+	}
+	return actual == expected
 }

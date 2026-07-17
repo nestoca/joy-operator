@@ -451,7 +451,17 @@ func TestHappyReconciliations(t *testing.T) {
 				},
 				app.Spec.Destination,
 			)
-			require.Equal(t, []string{"CreateNamespace=true"}, app.Spec.SyncPolicy.SyncOptions)
+			require.Equal(
+				t,
+				argocd.SyncPolicy{
+					Automated: argocd.SyncPolicyAutomated{
+						Prune:    new(true),
+						SelfHeal: new(true),
+					},
+					SyncOptions: []string{"CreateNamespace=true"},
+				},
+				app.Spec.SyncPolicy,
+			)
 		},
 	}
 
