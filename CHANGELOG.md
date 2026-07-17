@@ -1,3 +1,12 @@
+## [0.0.5](https://github.com/nestoca/joy-operator/compare/v0.0.4...v0.0.5) (2026-07-17)
+
+
+### Bug Fixes
+
+* **PL-6888:** fix destination server to https protocol ([a990c74](https://github.com/nestoca/joy-operator/commit/a990c7444e5c5cbad0779e113540fd1d5adb758d))
+
+
+
 ## [0.0.4](https://github.com/nestoca/joy-operator/compare/v0.0.3...v0.0.4) (2026-07-17)
 
 
