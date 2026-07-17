@@ -1,3 +1,12 @@
+## [0.0.3](https://github.com/nestoca/joy-operator/compare/v0.0.2...v0.0.3) (2026-07-17)
+
+
+### Bug Fixes
+
+* **PL-6888:** fix sync policy automated to match expected logic ([3d83281](https://github.com/nestoca/joy-operator/commit/3d83281d59505b83d04e4298506f639874000cea))
+
+
+
 ## [0.0.2](https://github.com/nestoca/joy-operator/compare/v0.0.1...v0.0.2) (2026-07-16)
 
 
