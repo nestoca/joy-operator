@@ -123,7 +123,6 @@ rules:
   - apiGroups: ["joy.nesto.ca"]
     resources: ["releases/status", "releases/finalizers"]
     verbs: ["get", "update", "patch"]
-{{- if not $values.rbac.releases.namespaces }}
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
@@ -141,28 +140,6 @@ subjects:
   - kind: ServiceAccount
     name: {{ $release }}
     namespace: {{ $releaseNamespace }}
-{{- else }}
-{{- range $ns := $values.rbac.releases.namespaces }}
----
-apiVersion: rbac.authorization.k8s.io/v1
-kind: RoleBinding
-metadata:
-  name: {{ $release }}-releases
-  namespace: {{ $ns }}
-  labels:
-    {{- if $values.commonLabels }}
-    {{- toYaml $values.commonLabels | nindent 4 }}
-    {{- end }}
-roleRef:
-  apiGroup: rbac.authorization.k8s.io
-  kind: ClusterRole
-  name: {{ $release }}-releases
-subjects:
-  - kind: ServiceAccount
-    name: {{ $release }}
-    namespace: {{ $releaseNamespace }}
-{{- end }}
-{{- end }}
 ---
 # Namespaces are cluster-scoped, so the operator needs cluster-wide access.
 apiVersion: rbac.authorization.k8s.io/v1

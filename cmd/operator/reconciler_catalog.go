@@ -57,6 +57,7 @@ func CatalogReconciler(params CatalogReconcilerParams) ctrl.Funcs {
 							Source: argocd.ApplicationSource{
 								RepoURL:        catalog.Spec.RepoURL,
 								TargetRevision: catalog.Spec.Revision,
+								Path:           "./",
 								Directory:      argocd.SourceDirectory{Include: params.EnvSourcePattern},
 							},
 							Destination: argocd.ApplicationDestination{
