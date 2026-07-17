@@ -82,7 +82,7 @@ func EnvironmentReconciler(params EnvironmentReconcilerParams) ctrl.Funcs {
 								TargetRevision: catalog.Spec.Revision,
 								Path:           "./",
 								Directory: argocd.SourceDirectory{
-									Include: fmt.Sprintf("environments/%s/releases", env.Name),
+									Include: fmt.Sprintf("environments/%s/releases/**/*.yaml", env.Name),
 									Recurse: true,
 								},
 							},
