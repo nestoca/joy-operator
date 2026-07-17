@@ -33,9 +33,9 @@ type ApplicationSpec struct {
 type ApplicationSource struct {
 	RepoURL        string          `json:"repoURL"`
 	TargetRevision string          `json:"targetRevision"`
-	Path           string          `json:"path"`
-	Chart          string          `json:"chart"`
-	Helm           SourceHelm      `json:"helm"`
+	Path           string          `json:"path,omitempty"`
+	Chart          string          `json:"chart,omitempty"`
+	Helm           SourceHelm      `json:"helm,omitzero"`
 	Directory      SourceDirectory `json:"directory,omitzero"`
 }
 
