@@ -23,8 +23,6 @@ import (
 	"k8s.io/client-go/tools/clientcmd"
 
 	"github.com/nestoca/joy/api/v1alpha1"
-	joy "github.com/nestoca/joy/pkg"
-	"github.com/nestoca/joy/pkg/helm"
 )
 
 const joyOperator = "joy-operator"
@@ -95,7 +93,7 @@ func run() (err error) {
 			Funcs: ReleaseReconciler(ReleaseReconcilerParams{
 				ChartSource: ChartSource{
 					Root:   cfg.ChartCacheDir,
-					Puller: helm.CLI{IO: joy.IO{Out: os.Stdout, Err: os.Stderr}},
+					Puller: MakeChartPuller(logger),
 				},
 				EnvDestinations: cfg.EnvDestinations,
 				CatalogName:     cfg.CatalogName,
