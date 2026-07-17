@@ -1,3 +1,12 @@
+## [0.0.12](https://github.com/nestoca/joy-operator/compare/v0.0.11...v0.0.12) (2026-07-17)
+
+
+### Bug Fixes
+
+* **PL-6888:** update release reconciler logic ([49a6e30](https://github.com/nestoca/joy-operator/commit/49a6e30e869b7fed9ac76eb8122a4fda6f0a65a7))
+
+
+
 ## [0.0.11](https://github.com/nestoca/joy-operator/compare/v0.0.10...v0.0.11) (2026-07-17)
 
 
