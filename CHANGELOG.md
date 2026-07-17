@@ -1,3 +1,12 @@
+## [0.0.11](https://github.com/nestoca/joy-operator/compare/v0.0.10...v0.0.11) (2026-07-17)
+
+
+### Bug Fixes
+
+* **PL-6888:** support concurrent chart pulls ([a384e65](https://github.com/nestoca/joy-operator/commit/a384e6502ac0b4097098839ad327f36655783217))
+
+
+
 ## [0.0.10](https://github.com/nestoca/joy-operator/compare/v0.0.9...v0.0.10) (2026-07-17)
 
 
