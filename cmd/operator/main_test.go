@@ -382,6 +382,7 @@ func TestHappyReconciliations(t *testing.T) {
 				app.Spec.Source,
 			)
 			require.Equal(t, argocd.ApplicationDestination{Server: "https://kubernetes.default.svc"}, app.Spec.Destination)
+			require.Equal(t, new(argocd.SyncPolicyAutomated), app.Spec.SyncPolicy.Automated)
 		},
 		"staging": func(t *testing.T, app *argocd.Application) {
 			require.Equal(t, "argocd", app.Namespace)
@@ -407,6 +408,7 @@ func TestHappyReconciliations(t *testing.T) {
 				},
 				app.Spec.Destination,
 			)
+			require.Equal(t, new(argocd.SyncPolicyAutomated), app.Spec.SyncPolicy.Automated)
 		},
 		"staging-test": func(t *testing.T, app *argocd.Application) {
 			require.Equal(t, "argocd", app.Namespace)
@@ -456,7 +458,7 @@ func TestHappyReconciliations(t *testing.T) {
 			require.Equal(
 				t,
 				argocd.SyncPolicy{
-					Automated: argocd.SyncPolicyAutomated{
+					Automated: &argocd.SyncPolicyAutomated{
 						Prune:    new(true),
 						SelfHeal: new(true),
 					},

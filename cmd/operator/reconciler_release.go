@@ -101,7 +101,7 @@ func ReleaseReconciler(params ReleaseReconcilerParams) ctrl.Funcs {
 
 			appIntf := k8s.TypedInterface[argocd.Application](ctrl.Client(ctx), argocd.ApplicationGVR).Namespace("argocd")
 
-			if _, err := appIntf.Apply(ctx, &app, metav1.ApplyOptions{FieldManager: joyOperator}); err != nil {
+			if _, err := appIntf.Apply(ctx, &app, metav1.ApplyOptions{FieldManager: joyOperator, Force: true}); err != nil {
 				return ctrl.Result{}, fmt.Errorf("failed to apply application: %w", err)
 			}
 
@@ -155,8 +155,9 @@ func renderReleaseApplication(params RenderApplicationParams) argocd.Application
 			APIVersion: "argoproj.io/v1alpha1",
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      fmt.Sprintf("%s-%s", params.Release.Environment.Name, params.Release.Name),
-			Namespace: "argocd",
+			Name:       fmt.Sprintf("%s-%s", params.Release.Environment.Name, params.Release.Name),
+			Namespace:  "argocd",
+			Finalizers: []string{"resources-finalizer.argocd.argoproj.io"},
 			Labels: map[string]string{
 				"nesto.ca/release":    "true",
 				"nesto.ca/env":        params.Release.Environment.Name,
@@ -182,11 +183,11 @@ func renderReleaseApplication(params RenderApplicationParams) argocd.Application
 		Spec: argocd.ApplicationSpec{
 			SyncPolicy: argocd.SyncPolicy{
 				SyncOptions: []string{"CreateNamespace=true"},
-				Automated: func() argocd.SyncPolicyAutomated {
+				Automated: func() *argocd.SyncPolicyAutomated {
 					if enabled, ok := params.Release.Annotations["argocd.nesto.ca/sync.enabled"]; ok && enabled != "true" {
-						return argocd.SyncPolicyAutomated{}
+						return nil
 					}
-					return argocd.SyncPolicyAutomated{
+					return &argocd.SyncPolicyAutomated{
 						Prune:    new(ValueEqualsOr(params.Release.Annotations, "argocd.nesto.ca/sync.prune", "true", true)),
 						SelfHeal: new(ValueEqualsOr(params.Release.Annotations, "argocd.nesto.ca/sync.heal", "true", true)),
 					}
