@@ -1,3 +1,12 @@
+## [0.0.7](https://github.com/nestoca/joy-operator/compare/v0.0.6...v0.0.7) (2026-07-17)
+
+
+### Bug Fixes
+
+* **PL-6888:** update self destination url for kubernetes ([160ffae](https://github.com/nestoca/joy-operator/commit/160ffae69ad07657964114c516ccf6fcabd4a4dd))
+
+
+
 ## [0.0.6](https://github.com/nestoca/joy-operator/compare/v0.0.5...v0.0.6) (2026-07-17)
 
 
