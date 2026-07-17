@@ -239,6 +239,9 @@ func TestHappyReconciliations(t *testing.T) {
 			ProjectMetadata: v1alpha1.ProjectMetadata{
 				ObjectMeta: metav1.ObjectMeta{Name: "test"},
 			},
+			Spec: v1alpha1.ProjectSpec{
+				Repository: "org/repo",
+			},
 		},
 		metav1.CreateOptions{},
 	)
@@ -333,8 +336,9 @@ func TestHappyReconciliations(t *testing.T) {
 				},
 			},
 			Spec: v1alpha1.ReleaseSpec{
-				Project: project.Name,
-				Version: "1.2.3",
+				Project:   project.Name,
+				Version:   "1.2.3",
+				Namespace: "custom",
 				Values: map[string]any{
 					"freehand": "hello",
 					"env":      "{{ .Environment.Spec.Values.env }}",
@@ -422,7 +426,7 @@ func TestHappyReconciliations(t *testing.T) {
 					"nesto.ca/env":        "staging",
 					"nesto.ca/project":    "test",
 					"nesto.ca/release":    "true",
-					"nesto.ca/repository": "",
+					"nesto.ca/repository": "repo",
 					"nesto.ca/stream":     "lost",
 					"nesto.ca/version":    "1.2.3",
 				},
@@ -454,7 +458,7 @@ func TestHappyReconciliations(t *testing.T) {
 				t,
 				argocd.ApplicationDestination{
 					Server:    "https://kubernetes.default.svc",
-					Namespace: "default",
+					Namespace: "custom",
 				},
 				app.Spec.Destination,
 			)
@@ -463,7 +467,7 @@ func TestHappyReconciliations(t *testing.T) {
 				argocd.SyncPolicy{
 					Automated: &argocd.SyncPolicyAutomated{
 						Prune:    new(true),
-						SelfHeal: new(true),
+						SelfHeal: nil,
 					},
 					SyncOptions: []string{"CreateNamespace=true"},
 				},
