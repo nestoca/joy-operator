@@ -5,6 +5,7 @@ import (
 	"context"
 	"fmt"
 	"slices"
+	"strings"
 
 	"go.yaml.in/yaml/v3"
 
@@ -159,11 +160,17 @@ func renderReleaseApplication(params RenderApplicationParams) argocd.Application
 			Namespace:  "argocd",
 			Finalizers: []string{"resources-finalizer.argocd.argoproj.io"},
 			Labels: map[string]string{
-				"nesto.ca/release":    "true",
-				"nesto.ca/env":        params.Release.Environment.Name,
-				"nesto.ca/project":    params.Release.Name,
-				"nesto.ca/version":    params.Release.Spec.Version,
-				"nesto.ca/repository": params.Release.Project.Spec.Repository,
+				"nesto.ca/release": "true",
+				"nesto.ca/env":     params.Release.Environment.Name,
+				"nesto.ca/project": params.Release.Project.Name,
+				"nesto.ca/version": params.Release.Spec.Version,
+				"nesto.ca/repository": func() string {
+					before, repo, ok := strings.Cut(params.Release.Project.Spec.Repository, "/")
+					if ok {
+						return repo
+					}
+					return cmp.Or(before, params.Release.Name)
+				}(),
 				"nesto.ca/stream": func() string {
 					streams := []string{"origination", "servicing", "platform", "marketing", "cross-system", "security", "data-engineering"}
 					for _, owner := range params.Release.Project.Spec.Owners {
@@ -188,8 +195,8 @@ func renderReleaseApplication(params RenderApplicationParams) argocd.Application
 						return nil
 					}
 					return &argocd.SyncPolicyAutomated{
-						Prune:    new(ValueEqualsOr(params.Release.Annotations, "argocd.nesto.ca/sync.prune", "true", true)),
-						SelfHeal: new(ValueEqualsOr(params.Release.Annotations, "argocd.nesto.ca/sync.heal", "true", true)),
+						Prune:    ValueEqualsOr(params.Release.Annotations, "argocd.nesto.ca/sync.prune", "true", new(true)),
+						SelfHeal: ValueEqualsOr(params.Release.Annotations, "argocd.nesto.ca/sync.heal", "true", nil),
 					}
 				}(),
 			},
@@ -203,15 +210,18 @@ func renderReleaseApplication(params RenderApplicationParams) argocd.Application
 					Values:      string(params.Values),
 				},
 			},
-			Destination: params.Destination,
+			Destination: argocd.ApplicationDestination{
+				Server:    params.Destination.Server,
+				Namespace: cmp.Or(params.Release.Spec.Namespace, params.Destination.Namespace),
+			},
 		},
 	}
 }
 
-func ValueEqualsOr(m map[string]string, key, expected string, fallback bool) bool {
+func ValueEqualsOr(m map[string]string, key, expected string, fallback *bool) *bool {
 	actual, ok := m[key]
 	if !ok {
 		return fallback
 	}
-	return actual == expected
+	return new(actual == expected)
 }
