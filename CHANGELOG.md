@@ -1,3 +1,12 @@
+## [0.0.4](https://github.com/nestoca/joy-operator/compare/v0.0.3...v0.0.4) (2026-07-17)
+
+
+### Bug Fixes
+
+* **PL-6888:** add application source path and remove erroneous rbac ([638e843](https://github.com/nestoca/joy-operator/commit/638e84375e0f3f9361ab5918515c32e6237190be))
+
+
+
 ## [0.0.3](https://github.com/nestoca/joy-operator/compare/v0.0.2...v0.0.3) (2026-07-17)
 
 
