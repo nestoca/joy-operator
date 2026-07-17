@@ -376,8 +376,11 @@ func TestHappyReconciliations(t *testing.T) {
 				argocd.ApplicationSource{
 					RepoURL:        "https://github.com/testing/catalog",
 					TargetRevision: "main",
-					Directory:      argocd.SourceDirectory{Include: "environments/*/env.yaml"},
-					Path:           "./",
+					Directory: argocd.SourceDirectory{
+						Include: "environments/*/env.yaml",
+						Recurse: true,
+					},
+					Path: "./",
 				},
 				app.Spec.Source,
 			)
@@ -394,7 +397,7 @@ func TestHappyReconciliations(t *testing.T) {
 					TargetRevision: "main",
 					Directory: argocd.SourceDirectory{
 						Recurse: true,
-						Include: "environments/staging/releases",
+						Include: "environments/staging/releases/**/*.yaml",
 					},
 					Path: "./",
 				},
