@@ -1,3 +1,13 @@
+## [0.0.9](https://github.com/nestoca/joy-operator/compare/v0.0.8...v0.0.9) (2026-07-17)
+
+
+### Bug Fixes
+
+* **PL-6888:** argocd struct tags and force conflicts ([0797c6c](https://github.com/nestoca/joy-operator/commit/0797c6c8ddf67f3b18c84e73c0a08710f9c4deee))
+* **PL-6888:** fix syncOptions serialization ([e94237f](https://github.com/nestoca/joy-operator/commit/e94237f42d0f19db34df04505b136f0a3b267558))
+
+
+
 ## [0.0.8](https://github.com/nestoca/joy-operator/compare/v0.0.7...v0.0.8) (2026-07-17)
 
 
