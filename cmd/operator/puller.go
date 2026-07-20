@@ -49,7 +49,7 @@ func (puller ChartPuller) Pull(ctx context.Context, opts helm.PullOptions) error
 		return fmt.Errorf("%w: %q", err, &buffer)
 	}
 
-	puller.Logger.Info("successfully pulled chart", "url", url.String())
+	puller.Logger.Info("successfully pulled chart", "url", url.String(), "version", opts.Chart.Version)
 
 	return nil
 }
