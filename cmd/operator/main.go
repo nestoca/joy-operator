@@ -115,6 +115,7 @@ func run() (err error) {
 				CatalogName:      cfg.CatalogName,
 				EnvSourcePattern: cfg.EnvSourcePattern,
 				Pull:             cfg.Pull,
+				ServiceName:      cfg.ServiceName,
 			}),
 		},
 	); err != nil {

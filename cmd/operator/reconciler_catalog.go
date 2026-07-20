@@ -19,6 +19,7 @@ type CatalogReconcilerParams struct {
 	CatalogName      string
 	Pull             bool
 	EnvSourcePattern string
+	ServiceName      string
 }
 
 func CatalogReconciler(params CatalogReconcilerParams) ctrl.Funcs {
@@ -49,7 +50,7 @@ func CatalogReconciler(params CatalogReconcilerParams) ctrl.Funcs {
 							Kind:       "Application",
 						},
 						ObjectMeta: metav1.ObjectMeta{
-							Name:       event.Name,
+							Name:       params.ServiceName + "-" + event.Name,
 							Namespace:  "argocd",
 							Finalizers: []string{"resources-finalizer.argocd.argoproj.io"},
 						},
