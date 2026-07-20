@@ -4,5 +4,5 @@ README.md
 .github/
 .git/
 test_data/
-*_test.go
+**/*_test.go
 

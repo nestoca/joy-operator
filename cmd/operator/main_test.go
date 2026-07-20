@@ -198,7 +198,7 @@ func TestMain(m *testing.M) {
 
 	must(
 		WithStandardInput(
-			withStdio(exec.Command("helm", "install", joyOperator, "../../chart", "-f", "-")),
+			withStdio(exec.Command("helm", "install", "joy-operator-tests", "../../chart", "-f", "-")),
 			must2(json.Marshal(values)),
 		).Run(),
 	)
@@ -209,7 +209,7 @@ func TestMain(m *testing.M) {
 			client,
 			&appsv1.Deployment{
 				TypeMeta:   metav1.TypeMeta{Kind: "Deployment", APIVersion: "apps/v1"},
-				ObjectMeta: metav1.ObjectMeta{Name: "joy-operator", Namespace: "default"},
+				ObjectMeta: metav1.ObjectMeta{Name: "joy-operator-tests", Namespace: "default"},
 			},
 			k8s.WaitOptions{
 				Interval: 250 * time.Millisecond,
@@ -372,7 +372,7 @@ func TestHappyReconciliations(t *testing.T) {
 	}
 
 	assertions := map[string]func(t *testing.T, app *argocd.Application){
-		"catalog": func(t *testing.T, app *argocd.Application) {
+		"joy-operator-tests-catalog": func(t *testing.T, app *argocd.Application) {
 			require.Equal(t, "argocd", app.Namespace)
 			require.Equal(t, "default", app.Spec.Project)
 			require.Equal(
@@ -564,7 +564,7 @@ func TestHappyReconciliations(t *testing.T) {
 	)
 
 	// safe to make these assertions without an eventually wrapper since we are running them after the release application got updated.
-	for _, name := range []string{"staging", "catalog"} {
+	for _, name := range []string{"staging", "joy-operator-tests-catalog"} {
 		app, err := appsIntf.Get(t.Context(), name, metav1.GetOptions{})
 		require.NoError(t, err, "failed to get app:", name)
 		require.Equal(t, "HEAD", app.Spec.Source.TargetRevision, "unexpected target revision for app:", name)
@@ -631,7 +631,7 @@ func TestEnvironmentSourcePattern(t *testing.T) {
 	EventuallyNoErrorf(
 		t,
 		func() error {
-			_, err := appsIntf.Get(t.Context(), "catalog", metav1.GetOptions{})
+			_, err := appsIntf.Get(t.Context(), "joy-operator-tests-catalog", metav1.GetOptions{})
 			return err
 		},
 		50*time.Second,
@@ -639,7 +639,7 @@ func TestEnvironmentSourcePattern(t *testing.T) {
 		"failed to get catalog app of apps",
 	)
 
-	app, err := appsIntf.Get(t.Context(), "catalog", metav1.GetOptions{})
+	app, err := appsIntf.Get(t.Context(), "joy-operator-tests-catalog", metav1.GetOptions{})
 	require.NoError(t, err)
 
 	require.Equal(t, "environments/*/env.yaml", app.Spec.Source.Directory.Include)
@@ -651,7 +651,7 @@ func TestEnvironmentSourcePattern(t *testing.T) {
 	require.NoError(
 		t,
 		WithStandardInput(
-			withStdio(exec.Command("helm", "upgrade", joyOperator, "../../chart", "-f", "-")),
+			withStdio(exec.Command("helm", "upgrade", "joy-operator-tests", "../../chart", "-f", "-")),
 			must2(json.Marshal(values)),
 		).Run(),
 	)
@@ -659,7 +659,7 @@ func TestEnvironmentSourcePattern(t *testing.T) {
 	EventuallyNoErrorf(
 		t,
 		func() error {
-			app, err := appsIntf.Get(t.Context(), "catalog", metav1.GetOptions{})
+			app, err := appsIntf.Get(t.Context(), "joy-operator-tests-catalog", metav1.GetOptions{})
 			if err != nil {
 				return fmt.Errorf("failed to get app: %w", err)
 			}

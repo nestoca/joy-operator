@@ -54,6 +54,8 @@ spec:
             periodSeconds: 10
             timeoutSeconds: 1
           env:
+            - name: SERVICE_NAME
+              value: {{ .Release.Name | quote }}
             - name: CHART_CACHE_DIR
               value: /helm/cache
             - name: ENV_DESTINATIONS
