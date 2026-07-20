@@ -1,3 +1,13 @@
+## [0.0.13](https://github.com/nestoca/joy-operator/compare/v0.0.12...v0.0.13) (2026-07-20)
+
+
+### Bug Fixes
+
+* **PL-6888:** add chart version to helm puller logs ([a37dd94](https://github.com/nestoca/joy-operator/commit/a37dd94016d75b53cf6f9677ec78d6da83062caf))
+* **PL-6888:** generate different catalog app by service prefixed by service name ([9ca9119](https://github.com/nestoca/joy-operator/commit/9ca91194f33069dc5a91f7ecdd59b7eb2eeb788b))
+
+
+
 ## [0.0.12](https://github.com/nestoca/joy-operator/compare/v0.0.11...v0.0.12) (2026-07-17)
 
 
