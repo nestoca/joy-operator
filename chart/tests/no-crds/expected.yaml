@@ -1,0 +1,328 @@
+---
+# Source: joy-operator-chart/templates/deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels: null
+  name: my-release
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      release: my-release
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        release: my-release
+    spec:
+      containers:
+        - env:
+            - name: SERVICE_NAME
+              value: my-release
+            - name: CHART_CACHE_DIR
+              value: /helm/cache
+            - name: ENV_DESTINATIONS
+              value: |
+                {}
+            - name: ENV_SOURCE_PATTERN
+              value: environments/*/env.yaml
+          image: ghcr.io/nestoca/joy-operator:latest
+          imagePullPolicy: IfNotPresent
+          name: main
+          ports:
+            - containerPort: 3000
+              name: health
+              protocol: TCP
+          readinessProbe:
+            failureThreshold: 6
+            httpGet:
+              path: /ready
+              port: 3000
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            timeoutSeconds: 1
+          resources: {}
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+            privileged: false
+            readOnlyRootFilesystem: true
+            runAsGroup: 65532
+            runAsNonRoot: true
+            runAsUser: 65532
+          volumeMounts:
+            - mountPath: /helm/cache
+              name: helm-cache
+            - mountPath: /.config/helm
+              name: helm-config
+            - mountPath: /tmp
+              name: tmp
+      securityContext:
+        fsGroup: 65532
+      serviceAccountName: my-release
+      volumes:
+        - emptyDir: {}
+          name: helm-cache
+        - emptyDir: {}
+          name: helm-config
+        - emptyDir: {}
+          name: tmp
+---
+# Source: joy-operator-chart/templates/rbac.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels: null
+  name: my-release-environments
+rules:
+  - apiGroups:
+      - joy.nesto.ca
+    resources:
+      - environments
+    verbs:
+      - get
+      - list
+      - watch
+      - update
+      - patch
+      - delete
+  - apiGroups:
+      - joy.nesto.ca
+    resources:
+      - environments/status
+      - environments/finalizers
+    verbs:
+      - get
+      - update
+      - patch
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels: null
+  name: my-release-projects
+rules:
+  - apiGroups:
+      - joy.nesto.ca
+    resources:
+      - projects
+    verbs:
+      - get
+      - list
+      - watch
+      - update
+      - patch
+      - delete
+  - apiGroups:
+      - joy.nesto.ca
+    resources:
+      - projects/status
+      - projects/finalizers
+    verbs:
+      - get
+      - update
+      - patch
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels: null
+  name: my-release-catalogs
+rules:
+  - apiGroups:
+      - joy.nesto.ca
+    resources:
+      - catalogs
+    verbs:
+      - get
+      - list
+      - watch
+      - update
+      - patch
+      - delete
+  - apiGroups:
+      - joy.nesto.ca
+    resources:
+      - catalogs/status
+      - catalogs/finalizers
+    verbs:
+      - get
+      - update
+      - patch
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels: null
+  name: my-release-releases
+rules:
+  - apiGroups:
+      - joy.nesto.ca
+    resources:
+      - releases
+    verbs:
+      - get
+      - list
+      - watch
+      - update
+      - patch
+      - delete
+  - apiGroups:
+      - joy.nesto.ca
+    resources:
+      - releases/status
+      - releases/finalizers
+    verbs:
+      - get
+      - update
+      - patch
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels: null
+  name: my-release-namespaces
+rules:
+  - apiGroups:
+      - ""
+    resources:
+      - namespaces
+    verbs:
+      - get
+      - list
+      - watch
+      - create
+      - update
+      - patch
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  labels: null
+  name: my-release-environments
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: my-release-environments
+subjects:
+  - kind: ServiceAccount
+    name: my-release
+    namespace: my-namespace
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  labels: null
+  name: my-release-projects
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: my-release-projects
+subjects:
+  - kind: ServiceAccount
+    name: my-release
+    namespace: my-namespace
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  labels: null
+  name: my-release-catalogs
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: my-release-catalogs
+subjects:
+  - kind: ServiceAccount
+    name: my-release
+    namespace: my-namespace
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  labels: null
+  name: my-release-releases
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: my-release-releases
+subjects:
+  - kind: ServiceAccount
+    name: my-release
+    namespace: my-namespace
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  labels: null
+  name: my-release-namespaces
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: my-release-namespaces
+subjects:
+  - kind: ServiceAccount
+    name: my-release
+    namespace: my-namespace
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  labels: null
+  name: my-release-applications
+  namespace: argocd
+rules:
+  - apiGroups:
+      - argoproj.io
+    resources:
+      - applications
+    verbs:
+      - get
+      - list
+      - watch
+      - create
+      - update
+      - patch
+      - delete
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  labels: null
+  name: my-release-applications
+  namespace: argocd
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: my-release-applications
+subjects:
+  - kind: ServiceAccount
+    name: my-release
+    namespace: my-namespace
+---
+# Source: joy-operator-chart/templates/service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  labels: null
+  name: my-release
+spec:
+  ports:
+    - name: health
+      port: 3000
+      protocol: TCP
+      targetPort: health
+  selector:
+    release: my-release
+  type: ClusterIP
+---
+# Source: joy-operator-chart/templates/serviceaccount.yaml
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  labels: null
+  name: my-release

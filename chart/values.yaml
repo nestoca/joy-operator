@@ -46,3 +46,5 @@ environmentDestinations: {}
 # Uses glob syntax from https://github.com/gobwas/glob
 # To specify multiple specific environments, use something like `environments/{dev,demo}/env.yaml`
 environmentSourcePattern: 'environments/*/env.yaml'
+
+installCRDs: true
