@@ -172,7 +172,17 @@ func renderReleaseApplication(params RenderApplicationParams) argocd.Application
 					return cmp.Or(before, params.Release.Name)
 				}(),
 				"nesto.ca/stream": func() string {
-					streams := []string{"origination", "servicing", "platform", "marketing", "cross-system", "security", "data-engineering"}
+					streams := []string{
+						"cross-system",
+						"data-engineering",
+						"data-science",
+						"marketing",
+						"origination",
+						"platform",
+						"renewals",
+						"security",
+						"servicing",
+					}
 					for _, owner := range params.Release.Project.Spec.Owners {
 						if slices.Contains(streams, owner) {
 							return owner
