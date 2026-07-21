@@ -1,3 +1,12 @@
+## [0.1.1](https://github.com/nestoca/joy-operator/compare/v0.1.0...v0.1.1) (2026-07-21)
+
+
+### Bug Fixes
+
+* **PL-6299:** add option to chart to not install crds ([eb97e4d](https://github.com/nestoca/joy-operator/commit/eb97e4d1f5274a9e0971d032d571dce116ec44a3))
+
+
+
 # [0.1.0](https://github.com/nestoca/joy-operator/compare/v0.0.13...v0.1.0) (2026-07-21)
 
 
