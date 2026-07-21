@@ -1,3 +1,12 @@
+## [0.1.2](https://github.com/nestoca/joy-operator/compare/v0.1.1...v0.1.2) (2026-07-21)
+
+
+### Bug Fixes
+
+* **PL-6299:** add streams to release reconciler ([8539507](https://github.com/nestoca/joy-operator/commit/853950754545fc3712e26d5c439ec2a4e901e2a1))
+
+
+
 ## [0.1.1](https://github.com/nestoca/joy-operator/compare/v0.1.0...v0.1.1) (2026-07-21)
 
 
