@@ -1,3 +1,12 @@
+# [0.1.0](https://github.com/nestoca/joy-operator/compare/v0.0.13...v0.1.0) (2026-07-21)
+
+
+### Features
+
+* **PL-6299:** update joy to latest ([2d5d12b](https://github.com/nestoca/joy-operator/commit/2d5d12b1a86f2369bd75d377ad588418ee468dae))
+
+
+
 ## [0.0.13](https://github.com/nestoca/joy-operator/compare/v0.0.12...v0.0.13) (2026-07-20)
 
 
