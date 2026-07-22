@@ -1,3 +1,12 @@
+# [0.2.0](https://github.com/nestoca/joy-operator/compare/v0.1.2...v0.2.0) (2026-07-22)
+
+
+### Features
+
+* **PL-6299:** only manage configured known env destinations ([93a9e99](https://github.com/nestoca/joy-operator/commit/93a9e99dc4f812dfe9a055bdb0714fe00ffb23ac))
+
+
+
 ## [0.1.2](https://github.com/nestoca/joy-operator/compare/v0.1.1...v0.1.2) (2026-07-21)
 
 
