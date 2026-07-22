@@ -15,8 +15,9 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/require"
-	"github.com/yokecd/yoke/pkg/k8s"
 	"go.yaml.in/yaml/v3"
+
+	"github.com/yokecd/yoke/pkg/k8s"
 
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -26,9 +27,10 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/client-go/tools/clientcmd"
 
-	"github.com/nestoca/joy-operator/cmd/operator/argocd"
 	"github.com/nestoca/joy/api/v1alpha1"
 	"github.com/nestoca/joy/pkg/helm"
+
+	"github.com/nestoca/joy-operator/cmd/operator/argocd"
 )
 
 // ChartArgs represent the inputs the joy-operator chart.

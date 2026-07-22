@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/davidmdm/x/xcontainer"
+
 	"github.com/yokecd/yoke/pkg/k8s"
 	"github.com/yokecd/yoke/pkg/k8s/ctrl"
 
@@ -14,8 +15,9 @@ import (
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 
-	"github.com/nestoca/joy-operator/cmd/operator/argocd"
 	"github.com/nestoca/joy/api/v1alpha1"
+
+	"github.com/nestoca/joy-operator/cmd/operator/argocd"
 )
 
 type EnvironmentReconcilerParams struct {
