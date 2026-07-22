@@ -6,14 +6,17 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
+	"maps"
 	"net/http"
 	"os"
 	"os/exec"
 	"path/filepath"
+	"slices"
 	"sync"
 	"syscall"
 	"time"
 
+	"github.com/davidmdm/x/xcontainer"
 	"github.com/davidmdm/x/xcontext"
 
 	"github.com/yokecd/yoke/pkg/k8s"
@@ -86,6 +89,7 @@ func run() (err error) {
 			Funcs: EnvironmentReconciler(EnvironmentReconcilerParams{
 				CatalogName: cfg.CatalogName,
 				Pull:        cfg.Pull,
+				ManagedEnvs: xcontainer.ToSet(slices.Collect(maps.Keys(cfg.EnvDestinations))),
 			}),
 		},
 		ctrl.Entry{

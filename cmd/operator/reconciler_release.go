@@ -36,6 +36,13 @@ type ReleaseReconcilerParams struct {
 func ReleaseReconciler(params ReleaseReconcilerParams) ctrl.Funcs {
 	return ctrl.Funcs{
 		Handler: func(ctx context.Context, event ctrl.Event) (ctrl.Result, error) {
+			destination, ok := params.EnvDestinations[event.Namespace]
+			if !ok {
+				// it's not an error if the release isn't in our env destinations.
+				// The operator does not manage all namespaces, and so we should exit early.
+				return ctrl.Result{}, nil
+			}
+
 			releaseCache := ctrl.CacheFromEvent[v1alpha1.Release](ctx, event)
 
 			release, err := releaseCache.Get(event.Name)
@@ -57,11 +64,6 @@ func ReleaseReconciler(params ReleaseReconcilerParams) ctrl.Funcs {
 			release.Project, err = projectCache.Get(release.Spec.Project)
 			if err != nil {
 				return ctrl.Result{}, fmt.Errorf("failed to get project: %w", err)
-			}
-
-			destination, ok := params.EnvDestinations[release.Environment.Name]
-			if !ok {
-				return ctrl.Result{}, ctrl.Terminalf("no app destination found for environment %s", release.Environment.Name)
 			}
 
 			catalogCache := ctrl.Cache[v1alpha1.Catalog](ctx, v1alpha1.CatalogGK, "")

@@ -4,6 +4,7 @@ go 1.26.4
 
 require (
 	github.com/davidmdm/conf v0.0.11
+	github.com/davidmdm/x/xcontainer v0.0.3
 	github.com/davidmdm/x/xcontext v0.0.4
 	github.com/davidmdm/x/xsync v0.0.3
 	github.com/nestoca/joy v0.96.0
