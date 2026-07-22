@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/davidmdm/x/xcontainer"
 	"github.com/yokecd/yoke/pkg/k8s"
 	"github.com/yokecd/yoke/pkg/k8s/ctrl"
 
@@ -20,11 +21,16 @@ import (
 type EnvironmentReconcilerParams struct {
 	CatalogName string
 	Pull        bool
+	ManagedEnvs xcontainer.Set[string]
 }
 
 func EnvironmentReconciler(params EnvironmentReconcilerParams) ctrl.Funcs {
 	return ctrl.Funcs{
 		Handler: func(ctx context.Context, event ctrl.Event) (ctrl.Result, error) {
+			if !params.ManagedEnvs.Has(event.Name) {
+				return ctrl.Result{}, nil
+			}
+
 			client := ctrl.Client(ctx)
 			envCache := ctrl.CacheFromEvent[v1alpha1.Environment](ctx, event)
 
