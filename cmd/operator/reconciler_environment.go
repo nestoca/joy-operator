@@ -82,6 +82,16 @@ func EnvironmentReconciler(params EnvironmentReconcilerParams) ctrl.Funcs {
 							Name:       event.Name,
 							Namespace:  "argocd",
 							Finalizers: []string{"resources-finalizer.argocd.argoproj.io"},
+							OwnerReferences: []metav1.OwnerReference{
+								{
+									APIVersion:         env.ApiVersion,
+									Kind:               env.Kind,
+									Name:               env.Name,
+									UID:                env.UID,
+									Controller:         new(true),
+									BlockOwnerDeletion: new(true),
+								},
+							},
 						},
 						Spec: argocd.ApplicationSpec{
 							Project: "default",
