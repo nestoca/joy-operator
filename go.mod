@@ -1,6 +1,6 @@
 module github.com/nestoca/joy-operator
 
-go 1.26.4
+go 1.26.5
 
 require (
 	github.com/davidmdm/conf v0.0.11
