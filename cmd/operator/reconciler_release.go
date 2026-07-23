@@ -38,9 +38,7 @@ func ReleaseReconciler(params ReleaseReconcilerParams) ctrl.Funcs {
 		Handler: func(ctx context.Context, event ctrl.Event) (ctrl.Result, error) {
 			destination, ok := params.EnvDestinations[event.Namespace]
 			if !ok {
-				// it's not an error if the release isn't in our env destinations.
-				// The operator does not manage all namespaces, and so we should exit early.
-				return ctrl.Result{}, nil
+				return ctrl.Result{}, ctrl.Terminalf("release with unmanaged environment: %v", event.Namespace)
 			}
 
 			releaseCache := ctrl.CacheFromEvent[v1alpha1.Release](ctx, event)
