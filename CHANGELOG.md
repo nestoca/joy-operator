@@ -1,3 +1,12 @@
+## [0.3.1](https://github.com/nestoca/joy-operator/compare/v0.3.0...v0.3.1) (2026-07-23)
+
+
+### Bug Fixes
+
+* **PL-6299:** update yoke controller runtime ([c4b11d6](https://github.com/nestoca/joy-operator/commit/c4b11d6c483e300169028abed78f676b3b09e54f))
+
+
+
 # [0.3.0](https://github.com/nestoca/joy-operator/compare/v0.2.0...v0.3.0) (2026-07-23)
 
 
