@@ -54,6 +54,16 @@ func CatalogReconciler(params CatalogReconcilerParams) ctrl.Funcs {
 							Name:       params.ServiceName + "-" + event.Name,
 							Namespace:  "argocd",
 							Finalizers: []string{"resources-finalizer.argocd.argoproj.io"},
+							OwnerReferences: []metav1.OwnerReference{
+								{
+									APIVersion:         catalog.APIVersion,
+									Kind:               catalog.Kind,
+									Name:               catalog.Name,
+									UID:                catalog.UID,
+									Controller:         new(true),
+									BlockOwnerDeletion: new(true),
+								},
+							},
 						},
 						Spec: argocd.ApplicationSpec{
 							Project: "default",
