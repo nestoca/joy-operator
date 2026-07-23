@@ -83,14 +83,16 @@ func run() (err error) {
 		Concurrency: cfg.Concurrency,
 	})
 
+	managedEnvs := xcontainer.ToSet(slices.Collect(maps.Keys(cfg.EnvDestinations)))
 	if err := controller.Register(
 		ctrl.Entry{
 			GroupKind: v1alpha1.EnvironmentGK,
 			Funcs: EnvironmentReconciler(EnvironmentReconcilerParams{
 				CatalogName: cfg.CatalogName,
 				Pull:        cfg.Pull,
-				ManagedEnvs: xcontainer.ToSet(slices.Collect(maps.Keys(cfg.EnvDestinations))),
+				ManagedEnvs: managedEnvs,
 			}),
+			Filter: func(event ctrl.Event) bool { return managedEnvs.Has(event.Name) },
 		},
 		ctrl.Entry{
 			GroupKind: v1alpha1.ReleaseGK,
@@ -102,6 +104,7 @@ func run() (err error) {
 				EnvDestinations: cfg.EnvDestinations,
 				CatalogName:     cfg.CatalogName,
 			}),
+			Filter: func(event ctrl.Event) bool { return managedEnvs.Has(event.Namespace) },
 		},
 		ctrl.Entry{
 			GroupKind: v1alpha1.ProjectGK,
@@ -121,6 +124,7 @@ func run() (err error) {
 				Pull:             cfg.Pull,
 				ServiceName:      cfg.ServiceName,
 			}),
+			Filter: func(event ctrl.Event) bool { return event.Name == cfg.CatalogName },
 		},
 	); err != nil {
 		return fmt.Errorf("failed to register reconcilers: %w", err)
