@@ -1,3 +1,17 @@
+# [0.3.0](https://github.com/nestoca/joy-operator/compare/v0.2.0...v0.3.0) (2026-07-23)
+
+
+### Bug Fixes
+
+* **PL-6299:** add controller filters ([92cf282](https://github.com/nestoca/joy-operator/commit/92cf282ee99561a28cbf6b3041ee6a9569ecfed1))
+
+
+### Features
+
+* **PL-6299:** add owner references ([e81c9ec](https://github.com/nestoca/joy-operator/commit/e81c9ecce0f58a51483c2871950663d6645343e3))
+
+
+
 # [0.2.0](https://github.com/nestoca/joy-operator/compare/v0.1.2...v0.2.0) (2026-07-22)
 
 
