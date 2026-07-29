@@ -1,3 +1,12 @@
+# [0.4.0](https://github.com/nestoca/joy-operator/compare/v0.3.1...v0.4.0) (2026-07-29)
+
+
+### Features
+
+* **PL-7072:** allow specifying helm user for login ([f054eb7](https://github.com/nestoca/joy-operator/commit/f054eb7f08f859560565961fab33fcf8ffcb74ca))
+
+
+
 ## [0.3.1](https://github.com/nestoca/joy-operator/compare/v0.3.0...v0.3.1) (2026-07-23)
 
 
