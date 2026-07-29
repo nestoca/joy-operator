@@ -22,6 +22,7 @@ type Config struct {
 }
 
 type HelmLogin struct {
+	User            string
 	Registry        string
 	CredentialsPath string
 	Credentials     []byte
@@ -35,6 +36,7 @@ func GetConfig() (Config, error) {
 	conf.Var(conf.Environ, &cfg.EnvDestinations, "ENV_DESTINATIONS", conf.JSON[map[string]argocd.ApplicationDestination])
 	conf.Var(conf.Environ, &cfg.EnvSourcePattern, "ENV_SOURCE_PATTERN", conf.Default("environments/*/env.yaml"))
 	conf.Var(conf.Environ, &cfg.HelmLogin.Registry, "HELM_REGISTRY")
+	conf.Var(conf.Environ, &cfg.HelmLogin.User, "HELM_USER", conf.Default("_json_key"))
 	conf.Var(conf.Environ, &cfg.HelmLogin.CredentialsPath, "HELM_REGISTRY_CREDENTIALS_PATH")
 	conf.Var(conf.Environ, &cfg.ChartCacheDir, "CHART_CACHE_DIR", conf.RequiredNonEmpty[string]())
 	conf.Var(conf.Environ, &cfg.Concurrency, "CONCURRENCY", conf.Default(defaultConcurrency))

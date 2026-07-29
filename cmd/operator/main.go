@@ -53,9 +53,14 @@ func run() (err error) {
 	}
 
 	if cfg.HelmLogin.Registry != "" {
-		if err := AuthenticateHelm(ctx, cfg.HelmLogin.Registry, cfg.HelmLogin.Credentials); err != nil {
+		if err := AuthenticateHelm(ctx, cfg.HelmLogin); err != nil {
 			return fmt.Errorf("failed to authenticate helm: %w", err)
 		}
+		logger.Info(
+			"successfully authenticated to helm registry",
+			"registry", cfg.HelmLogin.Registry,
+			"user", cfg.HelmLogin.User,
+		)
 	}
 
 	restCfg, err := func() (*rest.Config, error) {
@@ -190,13 +195,13 @@ func run() (err error) {
 	return <-e
 }
 
-func AuthenticateHelm(ctx context.Context, registry string, credentials []byte) error {
-	login := exec.CommandContext(ctx, "helm", "registry", "login", "-u", "_json_key", "--password-stdin", registry)
+func AuthenticateHelm(ctx context.Context, params HelmLogin) error {
+	login := exec.CommandContext(ctx, "helm", "registry", "login", "-u", params.User, "--password-stdin", params.Registry)
 
 	var buffer bytes.Buffer
 	login.Stdout = &buffer
 	login.Stderr = &buffer
-	login.Stdin = bytes.NewReader(credentials)
+	login.Stdin = bytes.NewReader(params.Credentials)
 
 	if err := login.Run(); err != nil {
 		return fmt.Errorf("%w: %q", err, &buffer)
