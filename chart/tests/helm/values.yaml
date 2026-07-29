@@ -1,0 +1,7 @@
+helm:
+  registry: ghcr.io/testy-test
+  user: ouath2accesstoken
+  credentials:
+    key: creds
+    mountPath: /secrets/helm.creds
+    secret: helm-creds

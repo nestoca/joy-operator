@@ -11,6 +11,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strconv"
 	"testing"
 	"time"
 
@@ -219,6 +220,10 @@ func TestMain(m *testing.M) {
 			},
 		),
 	)
+
+	if ok, _ := strconv.ParseBool(os.Getenv("SETUP_ONLY")); ok {
+		os.Exit(0)
+	}
 
 	os.Exit(m.Run())
 }

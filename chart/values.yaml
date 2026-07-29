@@ -2,6 +2,7 @@ image: ghcr.io/nestoca/joy-operator
 version: latest
 
 helm:
+  user: ''
   registry: ''
   credentials:
     secret: ''
