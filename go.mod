@@ -7,7 +7,7 @@ require (
 	github.com/davidmdm/x/xcontainer v0.0.3
 	github.com/davidmdm/x/xcontext v0.0.4
 	github.com/davidmdm/x/xsync v0.0.3
-	github.com/nestoca/joy v0.96.0
+	github.com/nestoca/joy v0.99.0
 	github.com/stretchr/testify v1.11.1
 	github.com/yokecd/yoke v0.20.23
 	go.yaml.in/yaml/v3 v3.0.4

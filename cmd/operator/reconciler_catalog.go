@@ -25,7 +25,7 @@ type CatalogReconcilerParams struct {
 
 func CatalogReconciler(params CatalogReconcilerParams) ctrl.Funcs {
 	return ctrl.Funcs{
-		Handler: func(ctx context.Context, event ctrl.Event) (ctrl.Result, error) {
+		Handler: func(ctx context.Context, event ctrl.Event) (_ ctrl.Result, retErr error) {
 			if event.Name != params.CatalogName {
 				return ctrl.Result{}, ctrl.Terminalf("unsupported catalog: wanted %q got %q", params.CatalogName, event.Name)
 			}
@@ -39,6 +39,10 @@ func CatalogReconciler(params CatalogReconcilerParams) ctrl.Funcs {
 				}
 				return ctrl.Result{}, fmt.Errorf("failed to get catalog: %w", err)
 			}
+
+			defer func() {
+				writeStatus(ctx, v1alpha1.CatalogGVR, catalog, retErr)
+			}()
 
 			appIntf := k8s.TypedInterface[argocd.Application](ctrl.Client(ctx), argocd.ApplicationGVR).Namespace("argocd")
 
