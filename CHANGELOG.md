@@ -1,3 +1,12 @@
+## [0.5.1](https://github.com/nestoca/joy-operator/compare/v0.5.0...v0.5.1) (2026-08-10)
+
+
+### Bug Fixes
+
+* **PLT-6661:** manage finalizers by using update instead of apply ([5cc90b0](https://github.com/nestoca/joy-operator/commit/5cc90b07de2b2a578165384b67d69f2221e83dde))
+
+
+
 # [0.5.0](https://github.com/nestoca/joy-operator/compare/v0.4.0...v0.5.0) (2026-08-10)
 
 
