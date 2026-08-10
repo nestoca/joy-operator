@@ -251,7 +251,7 @@ func TestHappyReconciliations(t *testing.T) {
 				Repository: "org/repo",
 			},
 		},
-		metav1.ApplyOptions{FieldManager: joyOperator},
+		metav1.ApplyOptions{FieldManager: "e2e-tests"},
 	)
 	require.NoError(t, err)
 
@@ -287,7 +287,7 @@ func TestHappyReconciliations(t *testing.T) {
 				},
 			},
 		},
-		metav1.ApplyOptions{FieldManager: joyOperator},
+		metav1.ApplyOptions{FieldManager: "e2e-tests"},
 	)
 	require.NoError(t, err)
 
@@ -309,7 +309,7 @@ func TestHappyReconciliations(t *testing.T) {
 				},
 			},
 		},
-		metav1.ApplyOptions{FieldManager: joyOperator},
+		metav1.ApplyOptions{FieldManager: "e2e-tests"},
 	)
 	require.NoError(t, err)
 
@@ -353,7 +353,7 @@ func TestHappyReconciliations(t *testing.T) {
 				},
 			},
 		},
-		metav1.ApplyOptions{FieldManager: joyOperator},
+		metav1.ApplyOptions{FieldManager: "e2e-tests"},
 	)
 	require.NoError(t, err)
 
@@ -630,7 +630,7 @@ func TestEnvironmentSourcePattern(t *testing.T) {
 				Revision: "main",
 			},
 		},
-		metav1.ApplyOptions{FieldManager: joyOperator},
+		metav1.ApplyOptions{FieldManager: "e2e-tests"},
 	)
 	require.NoError(t, err)
 
@@ -708,7 +708,7 @@ func TestReleasePruning(t *testing.T) {
 				Repository: "org/repo",
 			},
 		},
-		metav1.ApplyOptions{FieldManager: joyOperator},
+		metav1.ApplyOptions{FieldManager: "e2e-tests", Force: true},
 	)
 	require.NoError(t, err)
 
@@ -744,7 +744,7 @@ func TestReleasePruning(t *testing.T) {
 				},
 			},
 		},
-		metav1.ApplyOptions{FieldManager: joyOperator},
+		metav1.ApplyOptions{FieldManager: "e2e-tests", Force: true},
 	)
 	require.NoError(t, err)
 
@@ -766,7 +766,7 @@ func TestReleasePruning(t *testing.T) {
 				},
 			},
 		},
-		metav1.ApplyOptions{FieldManager: joyOperator},
+		metav1.ApplyOptions{FieldManager: "e2e-tests", Force: true},
 	)
 	require.NoError(t, err)
 
@@ -813,7 +813,7 @@ func TestReleasePruning(t *testing.T) {
 				},
 			},
 		},
-		metav1.ApplyOptions{FieldManager: joyOperator},
+		metav1.ApplyOptions{FieldManager: "e2e-tests", Force: true},
 	)
 	require.NoError(t, err)
 

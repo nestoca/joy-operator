@@ -86,13 +86,13 @@ func ReleaseReconciler(params ReleaseReconcilerParams) ctrl.Funcs {
 			switch {
 			case shouldPrune && !hasPruneReleaseFinalizer:
 				release.Finalizers = append(release.Finalizers, finalizerPruneRelease)
-				if _, err := releaseIntf.Apply(ctx, release, metav1.ApplyOptions{FieldManager: joyOperator, Force: true}); err != nil {
-					return ctrl.Result{}, fmt.Errorf("failed to apply prune-release finalizer: %w", err)
+				if _, err := releaseIntf.Update(ctx, release, metav1.UpdateOptions{FieldManager: joyOperator}); err != nil {
+					return ctrl.Result{}, fmt.Errorf("failed to add prune-release finalizer: %w", err)
 				}
 				return ctrl.Result{}, nil
 			case !shouldPrune && hasPruneReleaseFinalizer:
 				release.Finalizers = slices.DeleteFunc(release.Finalizers, func(finalizer string) bool { return finalizer == finalizerPruneRelease })
-				if _, err := releaseIntf.Apply(ctx, release, metav1.ApplyOptions{FieldManager: joyOperator, Force: true}); err != nil {
+				if _, err := releaseIntf.Update(ctx, release, metav1.UpdateOptions{FieldManager: joyOperator}); err != nil {
 					return ctrl.Result{}, fmt.Errorf("failed to remove prune-release finalizer: %w", err)
 				}
 				return ctrl.Result{}, nil
@@ -106,7 +106,7 @@ func ReleaseReconciler(params ReleaseReconcilerParams) ctrl.Funcs {
 				}
 				if hasPruneReleaseFinalizer {
 					release.Finalizers = slices.DeleteFunc(release.Finalizers, func(finalizer string) bool { return finalizer == finalizerPruneRelease })
-					if _, err := releaseIntf.Apply(ctx, release, metav1.ApplyOptions{FieldManager: joyOperator, Force: true}); err != nil {
+					if _, err := releaseIntf.Update(ctx, release, metav1.UpdateOptions{FieldManager: joyOperator}); err != nil {
 						return ctrl.Result{}, fmt.Errorf("failed to remove prune-release finalizer post app deletion: %w", err)
 					}
 				}
