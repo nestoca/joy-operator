@@ -14,6 +14,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/runtime/schema"
+	"k8s.io/client-go/util/retry"
 
 	"github.com/nestoca/joy/api/v1alpha1"
 
@@ -109,7 +110,9 @@ func EnvironmentReconciler(params EnvironmentReconcilerParams) ctrl.Funcs {
 								Namespace: ns.Name,
 							},
 							SyncPolicy: argocd.SyncPolicy{
-								Automated: &argocd.SyncPolicyAutomated{},
+								Automated: &argocd.SyncPolicyAutomated{
+									Prune: new(true),
+								},
 							},
 						},
 					},
@@ -118,7 +121,25 @@ func EnvironmentReconciler(params EnvironmentReconcilerParams) ctrl.Funcs {
 					return ctrl.Result{}, fmt.Errorf("failed to apply application: %w", err)
 				}
 			} else {
-				if err := appIntf.Delete(ctx, event.Name, metav1.DeleteOptions{}); err != nil && !kerrors.IsNotFound(err) {
+				if err := retry.RetryOnConflict(retry.DefaultBackoff, func() error {
+					app, err := appIntf.Get(ctx, event.Name, metav1.GetOptions{})
+					if err != nil {
+						return fmt.Errorf("failed to get application: %w", err)
+					}
+					app.Spec.SyncPolicy = argocd.SyncPolicy{
+						Automated: &argocd.SyncPolicyAutomated{
+							Prune: new(false),
+						},
+					}
+
+					app, err = appIntf.Apply(ctx, app, metav1.ApplyOptions{FieldManager: joyOperator, Force: true})
+					if err != nil {
+						return fmt.Errorf("failed to update syncPolicy to not prune: %w", err)
+					}
+					// We want a guarantee that when we delete the application that it was against a version of the resource who has prune de-activated.
+					// If we move from pull mode to non-pull mode, we don't want to drop all releases.
+					return appIntf.Delete(ctx, app.Name, metav1.DeleteOptions{Preconditions: &metav1.Preconditions{ResourceVersion: &app.ResourceVersion}})
+				}); err != nil && !kerrors.IsNotFound(err) {
 					return ctrl.Result{}, fmt.Errorf("failed to delete application: %w", err)
 				}
 			}
