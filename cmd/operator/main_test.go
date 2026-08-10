@@ -11,6 +11,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"slices"
 	"strconv"
 	"testing"
 	"time"
@@ -215,8 +216,8 @@ func TestMain(m *testing.M) {
 				ObjectMeta: metav1.ObjectMeta{Name: "joy-operator-tests", Namespace: "default"},
 			},
 			k8s.WaitOptions{
-				Interval: 250 * time.Millisecond,
-				Timeout:  15 * time.Second,
+				Interval: 500 * time.Millisecond,
+				Timeout:  30 * time.Second,
 			},
 		),
 	)
@@ -238,7 +239,7 @@ func TestHappyReconciliations(t *testing.T) {
 		Resource: "projects",
 	})
 
-	project, err := projectIntf.Create(
+	project, err := projectIntf.Apply(
 		t.Context(),
 		&v1alpha1.Project{
 			ApiVersion: v1alpha1.GroupVersion.Identifier(),
@@ -250,7 +251,7 @@ func TestHappyReconciliations(t *testing.T) {
 				Repository: "org/repo",
 			},
 		},
-		metav1.CreateOptions{},
+		metav1.ApplyOptions{FieldManager: joyOperator},
 	)
 	require.NoError(t, err)
 
@@ -260,7 +261,7 @@ func TestHappyReconciliations(t *testing.T) {
 		Resource: "catalogs",
 	})
 
-	catalog, err := catalogIntf.Create(
+	catalog, err := catalogIntf.Apply(
 		t.Context(),
 		&v1alpha1.Catalog{
 			TypeMeta: metav1.TypeMeta{
@@ -286,7 +287,7 @@ func TestHappyReconciliations(t *testing.T) {
 				},
 			},
 		},
-		metav1.CreateOptions{},
+		metav1.ApplyOptions{FieldManager: joyOperator},
 	)
 	require.NoError(t, err)
 
@@ -296,7 +297,7 @@ func TestHappyReconciliations(t *testing.T) {
 		Resource: "environments",
 	})
 
-	env, err := envIntf.Create(
+	env, err := envIntf.Apply(
 		t.Context(),
 		&v1alpha1.Environment{
 			ApiVersion:          v1alpha1.GroupVersion.Identifier(),
@@ -308,7 +309,7 @@ func TestHappyReconciliations(t *testing.T) {
 				},
 			},
 		},
-		metav1.CreateOptions{},
+		metav1.ApplyOptions{FieldManager: joyOperator},
 	)
 	require.NoError(t, err)
 
@@ -331,7 +332,7 @@ func TestHappyReconciliations(t *testing.T) {
 
 	releaseIntf = releaseIntf.Namespace(env.Namespace)
 
-	release, err := releaseIntf.Create(
+	release, err := releaseIntf.Apply(
 		t.Context(),
 		&v1alpha1.Release{
 			Kind:       v1alpha1.ReleaseGK.Kind,
@@ -352,7 +353,7 @@ func TestHappyReconciliations(t *testing.T) {
 				},
 			},
 		},
-		metav1.CreateOptions{},
+		metav1.ApplyOptions{FieldManager: joyOperator},
 	)
 	require.NoError(t, err)
 
@@ -422,7 +423,7 @@ func TestHappyReconciliations(t *testing.T) {
 				},
 				app.Spec.Destination,
 			)
-			require.Equal(t, new(argocd.SyncPolicyAutomated), app.Spec.SyncPolicy.Automated)
+			require.Equal(t, &argocd.SyncPolicyAutomated{Prune: new(true)}, app.Spec.SyncPolicy.Automated)
 		},
 		"staging-test": func(t *testing.T, app *argocd.Application) {
 			require.Equal(t, "argocd", app.Namespace)
@@ -616,7 +617,7 @@ func TestEnvironmentSourcePattern(t *testing.T) {
 		Resource: "catalogs",
 	})
 
-	_, err = catalogIntf.Create(
+	_, err = catalogIntf.Apply(
 		t.Context(),
 		&v1alpha1.Catalog{
 			TypeMeta: metav1.TypeMeta{
@@ -629,7 +630,7 @@ func TestEnvironmentSourcePattern(t *testing.T) {
 				Revision: "main",
 			},
 		},
-		metav1.CreateOptions{},
+		metav1.ApplyOptions{FieldManager: joyOperator},
 	)
 	require.NoError(t, err)
 
@@ -682,6 +683,196 @@ func TestEnvironmentSourcePattern(t *testing.T) {
 		250*time.Millisecond,
 		10*time.Second,
 		"failed assert environment source pattern",
+	)
+}
+
+func TestReleasePruning(t *testing.T) {
+	client, err := getKubeClient()
+	require.NoError(t, err)
+
+	projectIntf := k8s.TypedInterface[v1alpha1.Project](client, schema.GroupVersionResource{
+		Group:    v1alpha1.ProjectGVK.Group,
+		Version:  "v1alpha1",
+		Resource: "projects",
+	})
+
+	project, err := projectIntf.Apply(
+		t.Context(),
+		&v1alpha1.Project{
+			ApiVersion: v1alpha1.GroupVersion.Identifier(),
+			Kind:       v1alpha1.ProjectGK.Kind,
+			ProjectMetadata: v1alpha1.ProjectMetadata{
+				ObjectMeta: metav1.ObjectMeta{Name: "test"},
+			},
+			Spec: v1alpha1.ProjectSpec{
+				Repository: "org/repo",
+			},
+		},
+		metav1.ApplyOptions{FieldManager: joyOperator},
+	)
+	require.NoError(t, err)
+
+	catalogIntf := k8s.TypedInterface[v1alpha1.Catalog](client, schema.GroupVersionResource{
+		Group:    v1alpha1.CatalogGK.Group,
+		Version:  "v1alpha1",
+		Resource: "catalogs",
+	})
+
+	_, err = catalogIntf.Apply(
+		t.Context(),
+		&v1alpha1.Catalog{
+			TypeMeta: metav1.TypeMeta{
+				APIVersion: v1alpha1.GroupVersion.Identifier(),
+				Kind:       v1alpha1.CatalogGK.Kind,
+			},
+			ObjectMeta: metav1.ObjectMeta{
+				Name: "catalog",
+			},
+			Spec: v1alpha1.CatalogSpec{
+				RepoURL:  "https://github.com/testing/catalog",
+				Revision: "main",
+				Charts: v1alpha1.CatalogCharts{
+					Default: "default",
+					Refs: map[string]helm.Chart{
+						"default": {
+							Name:     "alpha",
+							RepoURL:  "file:///data/chart",
+							Version:  "6.6.6",
+							Mappings: map[string]any{},
+						},
+					},
+				},
+			},
+		},
+		metav1.ApplyOptions{FieldManager: joyOperator},
+	)
+	require.NoError(t, err)
+
+	envIntf := k8s.TypedInterface[v1alpha1.Environment](client, schema.GroupVersionResource{
+		Group:    v1alpha1.EnvironmentGK.Group,
+		Version:  "v1alpha1",
+		Resource: "environments",
+	})
+
+	env, err := envIntf.Apply(
+		t.Context(),
+		&v1alpha1.Environment{
+			ApiVersion:          v1alpha1.GroupVersion.Identifier(),
+			Kind:                v1alpha1.EnvironmentGK.Kind,
+			EnvironmentMetadata: v1alpha1.EnvironmentMetadata{ObjectMeta: metav1.ObjectMeta{Name: "staging"}},
+			Spec: v1alpha1.EnvironmentSpec{
+				Values: map[string]any{
+					"env": "alpha",
+				},
+			},
+		},
+		metav1.ApplyOptions{FieldManager: joyOperator},
+	)
+	require.NoError(t, err)
+
+	EventuallyNoErrorf(
+		t,
+		func() error {
+			_, err := client.Clientset.CoreV1().Namespaces().Get(t.Context(), "staging", metav1.GetOptions{})
+			return err
+		},
+		50*time.Millisecond,
+		2*time.Second,
+		"failed to get corresponding namespace for env",
+	)
+
+	releaseIntf := k8s.TypedInterface[v1alpha1.Release](client, schema.GroupVersionResource{
+		Group:    v1alpha1.ReleaseGK.Group,
+		Version:  "v1alpha1",
+		Resource: "releases",
+	})
+
+	releaseIntf = releaseIntf.Namespace(env.Name)
+
+	release, err := releaseIntf.Apply(
+		t.Context(),
+		&v1alpha1.Release{
+			Kind:       v1alpha1.ReleaseGK.Kind,
+			ApiVersion: v1alpha1.GroupVersion.Identifier(),
+			ReleaseMetadata: v1alpha1.ReleaseMetadata{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "test",
+					Namespace: env.Name,
+					Annotations: map[string]string{
+						"argocd.nesto.ca/sync.prune": "true",
+					},
+				},
+			},
+			Spec: v1alpha1.ReleaseSpec{
+				Project:   project.Name,
+				Version:   "1.2.3",
+				Namespace: "custom",
+				Values: map[string]any{
+					"freehand": "hello",
+					"env":      "{{ .Environment.Spec.Values.env }}",
+				},
+			},
+		},
+		metav1.ApplyOptions{FieldManager: joyOperator},
+	)
+	require.NoError(t, err)
+
+	EventuallyNoErrorf(
+		t,
+		func() error {
+			release, err := releaseIntf.Get(t.Context(), release.Name, metav1.GetOptions{})
+			if err != nil {
+				return fmt.Errorf("failed to get release: %w", err)
+			}
+			if !slices.Contains(release.Finalizers, finalizerPruneRelease) {
+				return fmt.Errorf("release does not container prune-release finalizer")
+			}
+			return nil
+		},
+		time.Second,
+		5*time.Second,
+		"release never reached expected state",
+	)
+
+	appsIntf := k8s.TypedInterface[argocd.Application](client, argocd.ApplicationGVR).Namespace("argocd")
+
+	EventuallyNoErrorf(
+		t,
+		func() error {
+			_, err := appsIntf.Get(t.Context(), "staging-test", metav1.GetOptions{})
+			return err
+		},
+		50*time.Millisecond,
+		2*time.Second,
+		"failed to get staging-test application",
+	)
+
+	rel, err := releaseIntf.Get(t.Context(), release.Name, metav1.GetOptions{})
+	require.NoError(t, err)
+	require.Equal(t, []string{finalizerPruneRelease}, rel.Finalizers)
+	require.NoError(t, releaseIntf.Delete(t.Context(), release.Name, metav1.DeleteOptions{}))
+
+	_, err = releaseIntf.Get(t.Context(), release.Name, metav1.GetOptions{})
+	require.NoError(t, err)
+
+	EventuallyNoErrorf(
+		t,
+		func() error {
+			release, err := appsIntf.Get(t.Context(), "staging-test", metav1.GetOptions{})
+			if err != nil {
+				if kerrors.IsNotFound(err) {
+					return nil
+				}
+				return fmt.Errorf("expected app to be not found but got: %v", err)
+			}
+			if release.DeletionTimestamp.IsZero() {
+				return fmt.Errorf("expected application to have a deletion timestamp but did not")
+			}
+			return nil
+		},
+		500*time.Millisecond,
+		10*time.Second,
+		"failed to see release application pruned",
 	)
 }
 

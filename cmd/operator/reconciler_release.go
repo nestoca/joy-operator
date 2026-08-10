@@ -14,6 +14,7 @@ import (
 
 	kerrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 
 	"github.com/nestoca/joy/api/v1alpha1"
 	joy "github.com/nestoca/joy/pkg"
@@ -33,6 +34,8 @@ type ReleaseReconcilerParams struct {
 	EnvDestinations map[string]argocd.ApplicationDestination
 }
 
+const finalizerPruneRelease = "joy.nesto.ca/prune-release"
+
 func ReleaseReconciler(params ReleaseReconcilerParams) ctrl.Funcs {
 	return ctrl.Funcs{
 		Handler: func(ctx context.Context, event ctrl.Event) (ctrl.Result, error) {
@@ -43,7 +46,17 @@ func ReleaseReconciler(params ReleaseReconcilerParams) ctrl.Funcs {
 
 			releaseCache := ctrl.CacheFromEvent[v1alpha1.Release](ctx, event)
 
+			releaseIntf := k8s.TypedInterface[v1alpha1.Release](
+				ctrl.Client(ctx),
+				schema.GroupVersionResource{Group: v1alpha1.Group, Version: v1alpha1.Version, Resource: "releases"},
+			).Namespace(event.Namespace)
+
 			release, err := releaseCache.Get(event.Name)
+			if kerrors.IsNotFound(err) {
+				// If the release is no longer in the cache, a deletion event happened. However, that doesn't mean that the release doesn't yet
+				// still exist in etcd with a deletion timestamp and finalizer. In order to handle cleanup, we need to check its live state.
+				release, err = releaseIntf.Get(ctx, event.Name, metav1.GetOptions{})
+			}
 			if err != nil {
 				if kerrors.IsNotFound(err) {
 					return ctrl.Result{}, nil
@@ -62,6 +75,42 @@ func ReleaseReconciler(params ReleaseReconcilerParams) ctrl.Funcs {
 			release.Project, err = projectCache.Get(release.Spec.Project)
 			if err != nil {
 				return ctrl.Result{}, fmt.Errorf("failed to get project: %w", err)
+			}
+
+			var (
+				isDeleted                = !release.DeletionTimestamp.IsZero()
+				hasPruneReleaseFinalizer = slices.Contains(release.Finalizers, finalizerPruneRelease)
+				shouldPrune              = release.Annotations["argocd.nesto.ca/sync.prune"] == "true"
+			)
+
+			switch {
+			case shouldPrune && !hasPruneReleaseFinalizer:
+				release.Finalizers = append(release.Finalizers, finalizerPruneRelease)
+				if _, err := releaseIntf.Apply(ctx, release, metav1.ApplyOptions{FieldManager: joyOperator, Force: true}); err != nil {
+					return ctrl.Result{}, fmt.Errorf("failed to apply prune-release finalizer: %w", err)
+				}
+				return ctrl.Result{}, nil
+			case !shouldPrune && hasPruneReleaseFinalizer:
+				release.Finalizers = slices.DeleteFunc(release.Finalizers, func(finalizer string) bool { return finalizer == finalizerPruneRelease })
+				if _, err := releaseIntf.Apply(ctx, release, metav1.ApplyOptions{FieldManager: joyOperator, Force: true}); err != nil {
+					return ctrl.Result{}, fmt.Errorf("failed to remove prune-release finalizer: %w", err)
+				}
+				return ctrl.Result{}, nil
+			}
+
+			appIntf := k8s.TypedInterface[argocd.Application](ctrl.Client(ctx), argocd.ApplicationGVR).Namespace("argocd")
+
+			if isDeleted && shouldPrune {
+				if err := appIntf.Delete(ctx, appName(release), metav1.DeleteOptions{}); err != nil && !kerrors.IsNotFound(err) {
+					return ctrl.Result{}, fmt.Errorf("failed to delete application: %w", err)
+				}
+				if hasPruneReleaseFinalizer {
+					release.Finalizers = slices.DeleteFunc(release.Finalizers, func(finalizer string) bool { return finalizer == finalizerPruneRelease })
+					if _, err := releaseIntf.Apply(ctx, release, metav1.ApplyOptions{FieldManager: joyOperator, Force: true}); err != nil {
+						return ctrl.Result{}, fmt.Errorf("failed to remove prune-release finalizer post app deletion: %w", err)
+					}
+				}
+				return ctrl.Result{}, nil
 			}
 
 			catalogCache := ctrl.Cache[v1alpha1.Catalog](ctx, v1alpha1.CatalogGK, "")
@@ -99,8 +148,6 @@ func ReleaseReconciler(params ReleaseReconcilerParams) ctrl.Funcs {
 				Values:      valuesBytes,
 				Chart:       chartFS.Chart,
 			})
-
-			appIntf := k8s.TypedInterface[argocd.Application](ctrl.Client(ctx), argocd.ApplicationGVR).Namespace("argocd")
 
 			if _, err := appIntf.Apply(ctx, &app, metav1.ApplyOptions{FieldManager: joyOperator, Force: true}); err != nil {
 				return ctrl.Result{}, fmt.Errorf("failed to apply application: %w", err)
@@ -156,7 +203,7 @@ func renderReleaseApplication(params RenderApplicationParams) argocd.Application
 			APIVersion: "argoproj.io/v1alpha1",
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name:       fmt.Sprintf("%s-%s", params.Release.Environment.Name, params.Release.Name),
+			Name:       appName(params.Release),
 			Namespace:  "argocd",
 			Finalizers: []string{"resources-finalizer.argocd.argoproj.io"},
 			Labels: map[string]string{
@@ -234,4 +281,8 @@ func ValueEqualsOr(m map[string]string, key, expected string, fallback *bool) *b
 		return fallback
 	}
 	return new(actual == expected)
+}
+
+func appName(release *v1alpha1.Release) string {
+	return fmt.Sprintf("%s-%s", release.Environment.Name, release.Name)
 }
