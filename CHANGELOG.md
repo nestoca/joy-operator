@@ -1,3 +1,12 @@
+# [0.5.0](https://github.com/nestoca/joy-operator/compare/v0.4.0...v0.5.0) (2026-08-10)
+
+
+### Features
+
+* **PL-6661:** implement release pruning respecting prune annotation ([61ec71a](https://github.com/nestoca/joy-operator/commit/61ec71adf497a439c1c16c67fa5feda45c63bde6))
+
+
+
 # [0.4.0](https://github.com/nestoca/joy-operator/compare/v0.3.1...v0.4.0) (2026-07-29)
 
 
