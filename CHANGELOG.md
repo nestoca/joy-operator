@@ -1,3 +1,12 @@
+# [0.6.0](https://github.com/nestoca/joy-operator/compare/v0.5.1...v0.6.0) (2026-08-14)
+
+
+### Features
+
+* **PLT-6720:** add marketplace stream ([9fd2ff9](https://github.com/nestoca/joy-operator/commit/9fd2ff96efaaf2cbb822b26d4453720a5efe9c8a))
+
+
+
 ## [0.5.1](https://github.com/nestoca/joy-operator/compare/v0.5.0...v0.5.1) (2026-08-10)
 
 
