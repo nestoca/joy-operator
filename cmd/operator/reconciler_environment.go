@@ -29,7 +29,7 @@ type EnvironmentReconcilerParams struct {
 
 func EnvironmentReconciler(params EnvironmentReconcilerParams) ctrl.Funcs {
 	return ctrl.Funcs{
-		Handler: func(ctx context.Context, event ctrl.Event) (ctrl.Result, error) {
+		Handler: func(ctx context.Context, event ctrl.Event) (_ ctrl.Result, retErr error) {
 			if !params.ManagedEnvs.Has(event.Name) {
 				return ctrl.Result{}, nil
 			}
@@ -44,6 +44,10 @@ func EnvironmentReconciler(params EnvironmentReconcilerParams) ctrl.Funcs {
 				}
 				return ctrl.Result{}, err
 			}
+
+			defer func() {
+				writeStatus(ctx, v1alpha1.EnvironmentGVR, env, retErr)
+			}()
 
 			catalogCache := ctrl.Cache[v1alpha1.Catalog](ctx, v1alpha1.CatalogGK, "")
 

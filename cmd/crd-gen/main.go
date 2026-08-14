@@ -24,6 +24,12 @@ func main() {
 }
 
 func run() error {
+	// The generated file is a Helm template: wrap all CRDs in an installCRDs
+	// guard so `task crd-gen` output is reproducible (see chart values.installCRDs).
+	if _, err := fmt.Fprintln(os.Stdout, "{{- if .Values.installCRDs -}}"); err != nil {
+		return err
+	}
+
 	encoder := yaml.NewEncoder(os.Stdout)
 	encoder.SetIndent(2)
 
@@ -31,6 +37,9 @@ func run() error {
 		Names apiextv1.CustomResourceDefinitionNames
 		Type  reflect.Type
 		Scope apiextv1.ResourceScope
+		// Status enables the /status subresource. Only resources whose
+		// reconciler reports a status (see joy-operator/cmd/operator) set this.
+		Status bool
 	}
 
 	for _, item := range []CRD{
@@ -42,8 +51,9 @@ func run() error {
 				Kind:       v1alpha1.ReleaseKind,
 				ListKind:   "ReleaseList",
 			},
-			Type:  reflect.TypeFor[v1alpha1.Release](),
-			Scope: apiextv1.NamespaceScoped,
+			Type:   reflect.TypeFor[v1alpha1.Release](),
+			Scope:  apiextv1.NamespaceScoped,
+			Status: true,
 		},
 		{
 			Names: apiextv1.CustomResourceDefinitionNames{
@@ -53,8 +63,9 @@ func run() error {
 				Kind:       v1alpha1.EnvironmentKind,
 				ListKind:   "EnvironmentList",
 			},
-			Type:  reflect.TypeFor[v1alpha1.Environment](),
-			Scope: apiextv1.ClusterScoped,
+			Type:   reflect.TypeFor[v1alpha1.Environment](),
+			Scope:  apiextv1.ClusterScoped,
+			Status: true,
 		},
 		{
 			Names: apiextv1.CustomResourceDefinitionNames{
@@ -75,8 +86,9 @@ func run() error {
 				Kind:       v1alpha1.CatalogKind,
 				ListKind:   "CatalogList",
 			},
-			Type:  reflect.TypeFor[v1alpha1.Catalog](),
-			Scope: apiextv1.ClusterScoped,
+			Type:   reflect.TypeFor[v1alpha1.Catalog](),
+			Scope:  apiextv1.ClusterScoped,
+			Status: true,
 		},
 	} {
 		crd := apiextv1.CustomResourceDefinition{
@@ -98,6 +110,12 @@ func run() error {
 						Served:  true,
 						Storage: true,
 						Schema:  &apiextv1.CustomResourceValidation{OpenAPIV3Schema: sanitizeSchema(openapi.SchemaFrom(item.Type))},
+						Subresources: func() *apiextv1.CustomResourceSubresources {
+							if !item.Status {
+								return nil
+							}
+							return &apiextv1.CustomResourceSubresources{Status: &apiextv1.CustomResourceSubresourceStatus{}}
+						}(),
 					},
 				},
 			},
@@ -113,6 +131,14 @@ func run() error {
 		if err := encoder.Encode(raw); err != nil {
 			return fmt.Errorf("failed to encode %s: %w", crd.Name, err)
 		}
+	}
+
+	if err := encoder.Close(); err != nil {
+		return fmt.Errorf("failed to flush encoder: %w", err)
+	}
+
+	if _, err := fmt.Fprintln(os.Stdout, "{{- end }}"); err != nil {
+		return err
 	}
 
 	return nil

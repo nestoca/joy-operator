@@ -28,6 +28,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/client-go/tools/clientcmd"
+	"k8s.io/client-go/util/retry"
 
 	"github.com/nestoca/joy/api/v1alpha1"
 	"github.com/nestoca/joy/pkg/helm"
@@ -330,7 +331,9 @@ func TestHappyReconciliations(t *testing.T) {
 		Resource: "releases",
 	})
 
-	releaseIntf = releaseIntf.Namespace(env.Namespace)
+	// Releases live in a namespace named after the environment (env is
+	// cluster-scoped, so env.Namespace is empty).
+	releaseIntf = releaseIntf.Namespace(env.Name)
 
 	release, err := releaseIntf.Apply(
 		t.Context(),
@@ -490,9 +493,19 @@ func TestHappyReconciliations(t *testing.T) {
 		assert(t, app)
 	}
 
-	maps.Copy(release.Spec.Values, map[string]any{"freehand": "updated"})
-
-	_, err = releaseIntf.Update(t.Context(), release, metav1.UpdateOptions{})
+	// Refetch before mutating: the operator now writes a status subresource,
+	// so the object created above has a stale resourceVersion. Retry on
+	// conflict to tolerate a concurrent status write.
+	err = retry.RetryOnConflict(retry.DefaultRetry, func() error {
+		var getErr error
+		release, getErr = releaseIntf.Get(t.Context(), "test", metav1.GetOptions{})
+		if getErr != nil {
+			return getErr
+		}
+		maps.Copy(release.Spec.Values, map[string]any{"freehand": "updated"})
+		_, updateErr := releaseIntf.Update(t.Context(), release, metav1.UpdateOptions{})
+		return updateErr
+	})
 	require.NoError(t, err)
 
 	EventuallyNoErrorf(
@@ -516,8 +529,16 @@ func TestHappyReconciliations(t *testing.T) {
 		"failed to see freehand property updated",
 	)
 
-	env.Spec.Values["env"] = "updated"
-	_, err = envIntf.Update(t.Context(), env, metav1.UpdateOptions{})
+	err = retry.RetryOnConflict(retry.DefaultRetry, func() error {
+		var getErr error
+		env, getErr = envIntf.Get(t.Context(), "staging", metav1.GetOptions{})
+		if getErr != nil {
+			return getErr
+		}
+		env.Spec.Values["env"] = "updated"
+		_, updateErr := envIntf.Update(t.Context(), env, metav1.UpdateOptions{})
+		return updateErr
+	})
 	require.NoError(t, err)
 
 	EventuallyNoErrorf(
@@ -541,13 +562,19 @@ func TestHappyReconciliations(t *testing.T) {
 		"failed to see env property updated",
 	)
 
-	defaultChartRef := catalog.Spec.Charts.Refs["default"]
-	defaultChartRef.Name = "beta"
-
-	catalog.Spec.Charts.Refs["default"] = defaultChartRef
-	catalog.Spec.Revision = "HEAD"
-
-	_, err = catalogIntf.Update(t.Context(), catalog, metav1.UpdateOptions{})
+	err = retry.RetryOnConflict(retry.DefaultRetry, func() error {
+		var getErr error
+		catalog, getErr = catalogIntf.Get(t.Context(), "catalog", metav1.GetOptions{})
+		if getErr != nil {
+			return getErr
+		}
+		defaultChartRef := catalog.Spec.Charts.Refs["default"]
+		defaultChartRef.Name = "beta"
+		catalog.Spec.Charts.Refs["default"] = defaultChartRef
+		catalog.Spec.Revision = "HEAD"
+		_, updateErr := catalogIntf.Update(t.Context(), catalog, metav1.UpdateOptions{})
+		return updateErr
+	})
 	require.NoError(t, err)
 
 	EventuallyNoErrorf(
@@ -581,7 +608,7 @@ func TestHappyReconciliations(t *testing.T) {
 	// And finally, the operator is non-destructive.
 	require.NoError(t, catalogIntf.Delete(t.Context(), "catalog", metav1.DeleteOptions{}))
 	require.NoError(t, envIntf.Delete(t.Context(), "staging", metav1.DeleteOptions{}))
-	require.NoError(t, releaseIntf.Namespace("staging").Delete(t.Context(), "test", metav1.DeleteOptions{}))
+	require.NoError(t, releaseIntf.Delete(t.Context(), "test", metav1.DeleteOptions{}))
 
 	EventuallyNoErrorf(
 		t,

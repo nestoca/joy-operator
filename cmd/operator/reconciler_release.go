@@ -38,7 +38,7 @@ const finalizerPruneRelease = "joy.nesto.ca/prune-release"
 
 func ReleaseReconciler(params ReleaseReconcilerParams) ctrl.Funcs {
 	return ctrl.Funcs{
-		Handler: func(ctx context.Context, event ctrl.Event) (ctrl.Result, error) {
+		Handler: func(ctx context.Context, event ctrl.Event) (_ ctrl.Result, retErr error) {
 			destination, ok := params.EnvDestinations[event.Namespace]
 			if !ok {
 				return ctrl.Result{}, ctrl.Terminalf("release with unmanaged environment: %v", event.Namespace)
@@ -63,6 +63,10 @@ func ReleaseReconciler(params ReleaseReconcilerParams) ctrl.Funcs {
 				}
 				return ctrl.Result{}, fmt.Errorf("failed to get release: %w", err)
 			}
+
+			defer func() {
+				writeStatus(ctx, v1alpha1.ReleaseGVR, release, retErr)
+			}()
 
 			envCache := ctrl.Cache[v1alpha1.Environment](ctx, v1alpha1.EnvironmentGK, "")
 			release.Environment, err = envCache.Get(release.Namespace)
