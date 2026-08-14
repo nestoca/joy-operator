@@ -1,3 +1,12 @@
+# [0.7.0](https://github.com/nestoca/joy-operator/compare/v0.6.0...v0.7.0) (2026-08-14)
+
+
+### Features
+
+* **PLT-6734:** configure streams ([9d1c12d](https://github.com/nestoca/joy-operator/commit/9d1c12d0b463c5ea6021e01af54ed5e70aa619c7))
+
+
+
 # [0.6.0](https://github.com/nestoca/joy-operator/compare/v0.5.1...v0.6.0) (2026-08-14)
 
 
