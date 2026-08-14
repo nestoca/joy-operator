@@ -49,7 +49,8 @@ type ChartArgs struct {
 	EnvironmentSourcePattern string                                   `json:"environmentSourcePattern,omitempty"`
 }
 type ControllerArgs struct {
-	PullMode bool `json:"pullMode"`
+	PullMode bool     `json:"pullMode"`
+	Streams  []string `json:"streams"`
 }
 
 type HelmArgs struct {
@@ -66,9 +67,12 @@ type SecretRef struct {
 
 func GetChartArgs() ChartArgs {
 	values := ChartArgs{
-		Image:      joyOperator,
-		Version:    "test",
-		Controller: ControllerArgs{PullMode: true},
+		Image:   joyOperator,
+		Version: "test",
+		Controller: ControllerArgs{
+			PullMode: true,
+			Streams:  []string{"platform", "other"},
+		},
 		EnvironmentDestinations: map[string]argocd.ApplicationDestination{
 			"staging": {
 				Server:    "https://kubernetes.default.svc",
@@ -249,6 +253,7 @@ func TestHappyReconciliations(t *testing.T) {
 			},
 			Spec: v1alpha1.ProjectSpec{
 				Repository: "org/repo",
+				Owners:     []string{"platform", "cool-kids"},
 			},
 		},
 		metav1.ApplyOptions{FieldManager: "e2e-tests"},
@@ -435,7 +440,7 @@ func TestHappyReconciliations(t *testing.T) {
 					"nesto.ca/project":    "test",
 					"nesto.ca/release":    "true",
 					"nesto.ca/repository": "repo",
-					"nesto.ca/stream":     "lost",
+					"nesto.ca/stream":     "platform",
 					"nesto.ca/version":    "1.2.3",
 				},
 				app.Labels,
@@ -489,6 +494,31 @@ func TestHappyReconciliations(t *testing.T) {
 		require.Truef(t, ok, "expected application %q to exist", name)
 		assert(t, app)
 	}
+
+	project.Spec.Owners = []string{"nobody"}
+
+	_, err = projectIntf.Apply(t.Context(), project, metav1.ApplyOptions{FieldManager: "e2e-tests"})
+	require.NoError(t, err)
+
+	EventuallyNoErrorf(
+		t,
+		func() error {
+			app, err := appsIntf.Get(t.Context(), "staging-test", metav1.GetOptions{})
+			if err != nil {
+				return err
+			}
+			if stream := app.Labels["nesto.ca/stream"]; stream != "lost" {
+				return fmt.Errorf("expected stream to become lost after updating project owners but got: %s", stream)
+			}
+			return nil
+		},
+		50*time.Millisecond,
+		2*time.Second,
+		"failed to change application stream after project update",
+	)
+
+	_, err = projectIntf.Apply(t.Context(), project, metav1.ApplyOptions{FieldManager: "e2e-tests"})
+	require.NoError(t, err)
 
 	maps.Copy(release.Spec.Values, map[string]any{"freehand": "updated"})
 
