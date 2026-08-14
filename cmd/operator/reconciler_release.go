@@ -224,6 +224,7 @@ func renderReleaseApplication(params RenderApplicationParams) argocd.Application
 						"data-engineering",
 						"data-science",
 						"marketing",
+						"marketplace",
 						"origination",
 						"platform",
 						"renewals",
