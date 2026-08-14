@@ -261,14 +261,8 @@ spec:
                 {}
             - name: ENV_SOURCE_PATTERN
               value: environments/*/env.yaml
-            - name: HELM_REGISTRY
-              value: ghcr.io/testy-test
-            - name: HELM_REGISTRY_CREDENTIALS_PATH
-              value: /secrets/helm.creds
-            - name: HELM_USER
-              value: ouath2accesstoken
             - name: STREAMS
-              value: ""
+              value: foo,bar,baz
           image: ghcr.io/nestoca/joy-operator:latest
           imagePullPolicy: IfNotPresent
           name: main
@@ -302,10 +296,6 @@ spec:
               name: helm-config
             - mountPath: /tmp
               name: tmp
-            - mountPath: /secrets/helm.creds
-              name: helm-credentials
-              readOnly: true
-              subPath: creds
       securityContext:
         fsGroup: 65532
       serviceAccountName: my-release
@@ -316,12 +306,6 @@ spec:
           name: helm-config
         - emptyDir: {}
           name: tmp
-        - name: helm-credentials
-          secret:
-            items:
-              - key: creds
-                path: creds
-            secretName: helm-creds
 ---
 # Source: joy-operator-chart/templates/rbac.yaml
 apiVersion: rbac.authorization.k8s.io/v1

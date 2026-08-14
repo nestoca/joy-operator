@@ -32,6 +32,7 @@ type ReleaseReconcilerParams struct {
 	CatalogName     string
 	ChartSource     ChartSource
 	EnvDestinations map[string]argocd.ApplicationDestination
+	Streams         []string
 }
 
 const finalizerPruneRelease = "joy.nesto.ca/prune-release"
@@ -147,6 +148,7 @@ func ReleaseReconciler(params ReleaseReconcilerParams) ctrl.Funcs {
 				Destination: destination,
 				Values:      valuesBytes,
 				Chart:       chartFS.Chart,
+				Streams:     params.Streams,
 			})
 
 			if _, err := appIntf.Apply(ctx, &app, metav1.ApplyOptions{FieldManager: joyOperator, Force: true}); err != nil {
@@ -163,6 +165,7 @@ type RenderApplicationParams struct {
 	Destination argocd.ApplicationDestination
 	Values      []byte
 	Chart       helm.Chart
+	Streams     []string
 }
 
 func renderReleaseApplication(params RenderApplicationParams) argocd.Application {
@@ -219,20 +222,8 @@ func renderReleaseApplication(params RenderApplicationParams) argocd.Application
 					return cmp.Or(before, params.Release.Name)
 				}(),
 				"nesto.ca/stream": func() string {
-					streams := []string{
-						"cross-system",
-						"data-engineering",
-						"data-science",
-						"marketing",
-						"marketplace",
-						"origination",
-						"platform",
-						"renewals",
-						"security",
-						"servicing",
-					}
 					for _, owner := range params.Release.Project.Spec.Owners {
-						if slices.Contains(streams, owner) {
+						if slices.Contains(params.Streams, owner) {
 							return owner
 						}
 					}

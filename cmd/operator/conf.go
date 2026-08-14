@@ -19,6 +19,7 @@ type Config struct {
 	Concurrency      int
 	Pull             bool
 	ServiceName      string
+	Streams          []string
 }
 
 type HelmLogin struct {
@@ -43,6 +44,7 @@ func GetConfig() (Config, error) {
 	conf.Var(conf.Environ, &cfg.Pull, "PULL_MODE")
 	conf.Var(conf.Environ, &cfg.CatalogName, "DEFAULT_CATALOG", conf.Default("catalog"))
 	conf.Var(conf.Environ, &cfg.ServiceName, "SERVICE_NAME", conf.Default("joy-operator-dev"))
+	conf.Var(conf.Environ, &cfg.Streams, "STREAMS")
 
 	if err := conf.Environ.Parse(); err != nil {
 		return cfg, fmt.Errorf("failed to parse environment: %w", err)

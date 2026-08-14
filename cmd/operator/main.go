@@ -108,18 +108,13 @@ func run() (err error) {
 				},
 				EnvDestinations: cfg.EnvDestinations,
 				CatalogName:     cfg.CatalogName,
+				Streams:         cfg.Streams,
 			}),
 			Filter: func(event ctrl.Event) bool { return managedEnvs.Has(event.Namespace) },
 		},
 		ctrl.Entry{
 			GroupKind: v1alpha1.ProjectGK,
-			Funcs: ctrl.Funcs{
-				Handler: func(ctx context.Context, e ctrl.Event) (ctrl.Result, error) {
-					// We do not want to do anything with projects other than have them stored in etcd.
-					// We attach a noop reconciler to the resource simply so that they can be available to other reconcilers via the informer cache.
-					return ctrl.Result{}, nil
-				},
-			},
+			Funcs:     ProjectReconciler(),
 		},
 		ctrl.Entry{
 			GroupKind: v1alpha1.CatalogGK,

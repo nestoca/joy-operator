@@ -263,6 +263,8 @@ spec:
                 {}
             - name: ENV_SOURCE_PATTERN
               value: environments/*/env.yaml
+            - name: STREAMS
+              value: ""
           image: ghcr.io/nestoca/joy-operator:latest
           imagePullPolicy: IfNotPresent
           name: main

@@ -84,6 +84,8 @@ spec:
             - name: DEFAULT_CATALOG
               value: {{ . | quote }}
             {{- end }}
+            - name: STREAMS
+              value: {{ (default .Values.controller.streams list) | join "," | quote }}
           volumeMounts:
             - name: helm-cache
               mountPath: /helm/cache

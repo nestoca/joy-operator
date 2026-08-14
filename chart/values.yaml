@@ -40,6 +40,7 @@ controller: {}
   # concurrency: 8
   # pullMode: true
   # defaultCatalog: catalog
+  # streams: [...stream-strings]
 
 environmentDestinations: {}
 
