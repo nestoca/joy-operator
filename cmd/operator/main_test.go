@@ -829,7 +829,7 @@ func TestReleasePruning(t *testing.T) {
 					Name:      "test",
 					Namespace: env.Name,
 					Annotations: map[string]string{
-						"argocd.nesto.ca/sync.prune": "true",
+						v1alpha1.PruneArgoAnnotation: "true",
 					},
 				},
 			},
@@ -855,7 +855,7 @@ func TestReleasePruning(t *testing.T) {
 				return fmt.Errorf("failed to get release: %w", err)
 			}
 			if !slices.Contains(release.Finalizers, finalizerPruneRelease) {
-				return fmt.Errorf("release does not container prune-release finalizer")
+				return fmt.Errorf("release does not contain prune-release finalizer")
 			}
 			return nil
 		},
@@ -877,33 +877,82 @@ func TestReleasePruning(t *testing.T) {
 		"failed to get staging-test application",
 	)
 
-	rel, err := releaseIntf.Get(t.Context(), release.Name, metav1.GetOptions{})
+	release, err = releaseIntf.Get(t.Context(), release.Name, metav1.GetOptions{})
 	require.NoError(t, err)
-	require.Equal(t, []string{finalizerPruneRelease}, rel.Finalizers)
-	require.NoError(t, releaseIntf.Delete(t.Context(), release.Name, metav1.DeleteOptions{}))
+	require.Equal(t, []string{finalizerPruneRelease}, release.Finalizers)
 
-	_, err = releaseIntf.Get(t.Context(), release.Name, metav1.GetOptions{})
-	require.NoError(t, err)
+	require.NoError(t, releaseIntf.Delete(t.Context(), release.Name, metav1.DeleteOptions{}))
 
 	EventuallyNoErrorf(
 		t,
 		func() error {
-			release, err := appsIntf.Get(t.Context(), "staging-test", metav1.GetOptions{})
-			if err != nil {
-				if kerrors.IsNotFound(err) {
-					return nil
-				}
-				return fmt.Errorf("expected app to be not found but got: %v", err)
+			app, err := appsIntf.Get(t.Context(), "staging-test", metav1.GetOptions{})
+			if err != nil && !kerrors.IsNotFound(err) {
+				return fmt.Errorf("expected app to be deleted or not found but got error: %v", err)
 			}
-			if release.DeletionTimestamp.IsZero() {
-				return fmt.Errorf("expected application to have a deletion timestamp but did not")
+			if app != nil && !app.DeletionTimestamp.IsZero() {
+				app.Finalizers = []string{}
+				if _, err := appsIntf.Update(t.Context(), app, metav1.UpdateOptions{}); err != nil {
+					return fmt.Errorf("failed to remove app finalizer for GC: %w", err)
+				}
+				return fmt.Errorf("expected app to have been fully deleted.")
+			}
+			if !kerrors.IsNotFound(err) {
+				return fmt.Errorf("expected app to be fully removed from cluster but was not")
+			}
+			if _, err := releaseIntf.Get(t.Context(), release.Name, metav1.GetOptions{}); err == nil || !kerrors.IsNotFound(err) {
+				return fmt.Errorf("expected release to be not found but got error: %v", err)
 			}
 			return nil
 		},
 		500*time.Millisecond,
 		10*time.Second,
-		"failed to see release application pruned",
+		"failed to see release and application application pruned",
 	)
+
+	release, err = releaseIntf.Apply(
+		t.Context(),
+		&v1alpha1.Release{
+			Kind:       v1alpha1.ReleaseGK.Kind,
+			ApiVersion: v1alpha1.GroupVersion.Identifier(),
+			ReleaseMetadata: v1alpha1.ReleaseMetadata{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "test",
+					Namespace: env.Name,
+					Labels:    map[string]string{v1alpha1.PreviewLabel: "true"},
+				},
+			},
+			Spec: v1alpha1.ReleaseSpec{
+				Project:   project.Name,
+				Version:   "1.2.3",
+				Namespace: "custom",
+				Values: map[string]any{
+					"freehand": "hello",
+					"env":      "{{ .Environment.Spec.Values.env }}",
+				},
+			},
+		},
+		metav1.ApplyOptions{FieldManager: "e2e-tests", Force: true},
+	)
+	require.NoError(t, err)
+
+	EventuallyNoErrorf(
+		t,
+		func() error {
+			release, err := releaseIntf.Get(t.Context(), release.Name, metav1.GetOptions{})
+			if err != nil {
+				return fmt.Errorf("failed to get release: %w", err)
+			}
+			if !slices.Contains(release.Finalizers, finalizerPruneRelease) {
+				return fmt.Errorf("prune release finalizer not found")
+			}
+			return nil
+		},
+		500*time.Millisecond,
+		10*time.Second,
+		"did not get expected release state",
+	)
+	require.NoError(t, err)
 }
 
 func EventuallyNoErrorf(t *testing.T, fn func() error, tick time.Duration, timeout time.Duration, msg string, args ...any) {
