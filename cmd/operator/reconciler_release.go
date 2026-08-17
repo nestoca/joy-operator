@@ -81,7 +81,7 @@ func ReleaseReconciler(params ReleaseReconcilerParams) ctrl.Funcs {
 			var (
 				isDeleted                = !release.DeletionTimestamp.IsZero()
 				hasPruneReleaseFinalizer = slices.Contains(release.Finalizers, finalizerPruneRelease)
-				shouldPrune              = release.Annotations["argocd.nesto.ca/sync.prune"] == "true"
+				shouldPrune              = release.Annotations[v1alpha1.PruneArgoAnnotation] == "true" || release.Labels[v1alpha1.PreviewLabel] == "true"
 			)
 
 			switch {
