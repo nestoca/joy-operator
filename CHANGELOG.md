@@ -1,3 +1,12 @@
+## [0.7.2](https://github.com/nestoca/joy-operator/compare/v0.7.1...v0.7.2) (2026-08-18)
+
+
+### Bug Fixes
+
+* **PLT-5890:** copy release labels to application ([a9ea922](https://github.com/nestoca/joy-operator/commit/a9ea922d5c9978df8f19ad4aada7aec6525c8262))
+
+
+
 ## [0.7.1](https://github.com/nestoca/joy-operator/compare/v0.7.0...v0.7.1) (2026-08-18)
 
 
