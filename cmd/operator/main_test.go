@@ -346,6 +346,10 @@ func TestHappyReconciliations(t *testing.T) {
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "test",
 					Namespace: env.Name,
+					Labels: map[string]string{
+						"some":         "label",
+						"nesto.ca/env": "potato",
+					},
 				},
 			},
 			Spec: v1alpha1.ReleaseSpec{
@@ -436,6 +440,7 @@ func TestHappyReconciliations(t *testing.T) {
 			require.Equal(
 				t,
 				map[string]string{
+					"some":                "label",
 					"nesto.ca/env":        "staging",
 					"nesto.ca/project":    "test",
 					"nesto.ca/release":    "true",
