@@ -1,3 +1,12 @@
+## [0.7.1](https://github.com/nestoca/joy-operator/compare/v0.7.0...v0.7.1) (2026-08-18)
+
+
+### Bug Fixes
+
+* **PLT-5890:** always prune previews ([d4acd31](https://github.com/nestoca/joy-operator/commit/d4acd31f560eb923704ad3e767cf4b41d0a28b7b))
+
+
+
 # [0.7.0](https://github.com/nestoca/joy-operator/compare/v0.6.0...v0.7.0) (2026-08-14)
 
 
