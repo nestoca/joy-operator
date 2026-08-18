@@ -4,6 +4,7 @@ import (
 	"cmp"
 	"context"
 	"fmt"
+	"maps"
 	"slices"
 	"strings"
 
@@ -209,27 +210,30 @@ func renderReleaseApplication(params RenderApplicationParams) argocd.Application
 			Name:       appName(params.Release),
 			Namespace:  "argocd",
 			Finalizers: []string{"resources-finalizer.argocd.argoproj.io"},
-			Labels: map[string]string{
-				"nesto.ca/release": "true",
-				"nesto.ca/env":     params.Release.Environment.Name,
-				"nesto.ca/project": params.Release.Project.Name,
-				"nesto.ca/version": params.Release.Spec.Version,
-				"nesto.ca/repository": func() string {
-					before, repo, ok := strings.Cut(params.Release.Project.Spec.Repository, "/")
-					if ok {
-						return repo
-					}
-					return cmp.Or(before, params.Release.Name)
-				}(),
-				"nesto.ca/stream": func() string {
-					for _, owner := range params.Release.Project.Spec.Owners {
-						if slices.Contains(params.Streams, owner) {
-							return owner
+			Labels: mergeMaps(
+				params.Release.Labels,
+				map[string]string{
+					"nesto.ca/release": "true",
+					"nesto.ca/env":     params.Release.Environment.Name,
+					"nesto.ca/project": params.Release.Project.Name,
+					"nesto.ca/version": params.Release.Spec.Version,
+					"nesto.ca/repository": func() string {
+						before, repo, ok := strings.Cut(params.Release.Project.Spec.Repository, "/")
+						if ok {
+							return repo
 						}
-					}
-					return "lost"
-				}(),
-			},
+						return cmp.Or(before, params.Release.Name)
+					}(),
+					"nesto.ca/stream": func() string {
+						for _, owner := range params.Release.Project.Spec.Owners {
+							if slices.Contains(params.Streams, owner) {
+								return owner
+							}
+						}
+						return "lost"
+					}(),
+				},
+			),
 			Annotations: map[string]string{
 				"nesto.ca/release-version":                                        params.Release.Spec.Version,
 				"notifications.argoproj.io/subscribe.on-production-release.slack": "notif-releases",
@@ -277,4 +281,14 @@ func ValueEqualsOr(m map[string]string, key, expected string, fallback *bool) *b
 
 func appName(release *v1alpha1.Release) string {
 	return fmt.Sprintf("%s-%s", release.Environment.Name, release.Name)
+}
+
+func mergeMaps[K comparable, T any](items ...map[K]T) (result map[K]T) {
+	for _, item := range items {
+		if result == nil && item != nil {
+			result = map[K]T{}
+		}
+		maps.Copy(result, item)
+	}
+	return
 }
