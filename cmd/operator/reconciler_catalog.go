@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/yokecd/yoke/pkg/k8s"
 	"github.com/yokecd/yoke/pkg/k8s/ctrl"
 
 	kerrors "k8s.io/apimachinery/pkg/api/errors"
@@ -40,7 +39,7 @@ func CatalogReconciler(params CatalogReconcilerParams) ctrl.Funcs {
 				return ctrl.Result{}, fmt.Errorf("failed to get catalog: %w", err)
 			}
 
-			appIntf := k8s.TypedInterface[argocd.Application](ctrl.Client(ctx), argocd.ApplicationGVR).Namespace("argocd")
+			appIntf := ctrl.Client(ctx).TypedInterface[argocd.Application](argocd.ApplicationGVR).Namespace("argocd")
 
 			if params.Pull {
 				if _, err := appIntf.Apply(
