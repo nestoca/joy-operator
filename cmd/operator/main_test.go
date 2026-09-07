@@ -167,7 +167,7 @@ func TestMain(m *testing.M) {
 		),
 	)
 
-	crdIntf := k8s.TypedInterface[apiextensionsv1.CustomResourceDefinition](client, schema.GroupVersionResource{
+	crdIntf := client.TypedInterface[apiextensionsv1.CustomResourceDefinition](schema.GroupVersionResource{
 		Group:    "apiextensions.k8s.io",
 		Version:  "v1",
 		Resource: "customresourcedefinitions",
@@ -175,7 +175,7 @@ func TestMain(m *testing.M) {
 
 	must2(crdIntf.Apply(context.Background(), argocd.ApplicationCRD, metav1.ApplyOptions{FieldManager: "operator-tests"}))
 
-	must(k8s.WaitForReady(context.Background(), client, argocd.ApplicationCRD, k8s.WaitOptions{
+	must(client.WaitForReady(context.Background(), argocd.ApplicationCRD, k8s.WaitOptions{
 		Timeout:  5 * time.Second,
 		Interval: 250 * time.Millisecond,
 	}))
@@ -212,9 +212,8 @@ func TestMain(m *testing.M) {
 	)
 
 	must(
-		k8s.WaitForReady(
+		client.WaitForReady(
 			context.Background(),
-			client,
 			&appsv1.Deployment{
 				TypeMeta:   metav1.TypeMeta{Kind: "Deployment", APIVersion: "apps/v1"},
 				ObjectMeta: metav1.ObjectMeta{Name: "joy-operator-tests", Namespace: "default"},
@@ -237,7 +236,7 @@ func TestHappyReconciliations(t *testing.T) {
 	client, err := getKubeClient()
 	require.NoError(t, err)
 
-	projectIntf := k8s.TypedInterface[v1alpha1.Project](client, schema.GroupVersionResource{
+	projectIntf := client.TypedInterface[v1alpha1.Project](schema.GroupVersionResource{
 		Group:    v1alpha1.ProjectGVK.Group,
 		Version:  "v1alpha1",
 		Resource: "projects",
@@ -260,7 +259,7 @@ func TestHappyReconciliations(t *testing.T) {
 	)
 	require.NoError(t, err)
 
-	catalogIntf := k8s.TypedInterface[v1alpha1.Catalog](client, schema.GroupVersionResource{
+	catalogIntf := client.TypedInterface[v1alpha1.Catalog](schema.GroupVersionResource{
 		Group:    v1alpha1.CatalogGK.Group,
 		Version:  "v1alpha1",
 		Resource: "catalogs",
@@ -296,7 +295,7 @@ func TestHappyReconciliations(t *testing.T) {
 	)
 	require.NoError(t, err)
 
-	envIntf := k8s.TypedInterface[v1alpha1.Environment](client, schema.GroupVersionResource{
+	envIntf := client.TypedInterface[v1alpha1.Environment](schema.GroupVersionResource{
 		Group:    v1alpha1.EnvironmentGK.Group,
 		Version:  "v1alpha1",
 		Resource: "environments",
@@ -329,7 +328,7 @@ func TestHappyReconciliations(t *testing.T) {
 		"failed to get corresponding namespace for env",
 	)
 
-	releaseIntf := k8s.TypedInterface[v1alpha1.Release](client, schema.GroupVersionResource{
+	releaseIntf := client.TypedInterface[v1alpha1.Release](schema.GroupVersionResource{
 		Group:    v1alpha1.ReleaseGK.Group,
 		Version:  "v1alpha1",
 		Resource: "releases",
@@ -366,7 +365,7 @@ func TestHappyReconciliations(t *testing.T) {
 	)
 	require.NoError(t, err)
 
-	appsIntf := k8s.TypedInterface[argocd.Application](client, argocd.ApplicationGVR).Namespace("argocd")
+	appsIntf := client.TypedInterface[argocd.Application](argocd.ApplicationGVR).Namespace("argocd")
 
 	EventuallyNoErrorf(
 		t,
@@ -646,7 +645,7 @@ func TestEnvironmentSourcePattern(t *testing.T) {
 	client, err := getKubeClient()
 	require.NoError(t, err)
 
-	catalogIntf := k8s.TypedInterface[v1alpha1.Catalog](client, schema.GroupVersionResource{
+	catalogIntf := client.TypedInterface[v1alpha1.Catalog](schema.GroupVersionResource{
 		Group:    v1alpha1.CatalogGK.Group,
 		Version:  "v1alpha1",
 		Resource: "catalogs",
@@ -669,7 +668,7 @@ func TestEnvironmentSourcePattern(t *testing.T) {
 	)
 	require.NoError(t, err)
 
-	appsIntf := k8s.TypedInterface[argocd.Application](client, argocd.ApplicationGVR).Namespace("argocd")
+	appsIntf := client.TypedInterface[argocd.Application](argocd.ApplicationGVR).Namespace("argocd")
 
 	EventuallyNoErrorf(
 		t,
@@ -725,7 +724,7 @@ func TestReleasePruning(t *testing.T) {
 	client, err := getKubeClient()
 	require.NoError(t, err)
 
-	projectIntf := k8s.TypedInterface[v1alpha1.Project](client, schema.GroupVersionResource{
+	projectIntf := client.TypedInterface[v1alpha1.Project](schema.GroupVersionResource{
 		Group:    v1alpha1.ProjectGVK.Group,
 		Version:  "v1alpha1",
 		Resource: "projects",
@@ -747,7 +746,7 @@ func TestReleasePruning(t *testing.T) {
 	)
 	require.NoError(t, err)
 
-	catalogIntf := k8s.TypedInterface[v1alpha1.Catalog](client, schema.GroupVersionResource{
+	catalogIntf := client.TypedInterface[v1alpha1.Catalog](schema.GroupVersionResource{
 		Group:    v1alpha1.CatalogGK.Group,
 		Version:  "v1alpha1",
 		Resource: "catalogs",
@@ -783,7 +782,7 @@ func TestReleasePruning(t *testing.T) {
 	)
 	require.NoError(t, err)
 
-	envIntf := k8s.TypedInterface[v1alpha1.Environment](client, schema.GroupVersionResource{
+	envIntf := client.TypedInterface[v1alpha1.Environment](schema.GroupVersionResource{
 		Group:    v1alpha1.EnvironmentGK.Group,
 		Version:  "v1alpha1",
 		Resource: "environments",
@@ -816,7 +815,7 @@ func TestReleasePruning(t *testing.T) {
 		"failed to get corresponding namespace for env",
 	)
 
-	releaseIntf := k8s.TypedInterface[v1alpha1.Release](client, schema.GroupVersionResource{
+	releaseIntf := client.TypedInterface[v1alpha1.Release](schema.GroupVersionResource{
 		Group:    v1alpha1.ReleaseGK.Group,
 		Version:  "v1alpha1",
 		Resource: "releases",
@@ -869,7 +868,7 @@ func TestReleasePruning(t *testing.T) {
 		"release never reached expected state",
 	)
 
-	appsIntf := k8s.TypedInterface[argocd.Application](client, argocd.ApplicationGVR).Namespace("argocd")
+	appsIntf := client.TypedInterface[argocd.Application](argocd.ApplicationGVR).Namespace("argocd")
 
 	EventuallyNoErrorf(
 		t,
