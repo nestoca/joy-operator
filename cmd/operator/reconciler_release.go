@@ -10,12 +10,10 @@ import (
 
 	"go.yaml.in/yaml/v3"
 
-	"github.com/yokecd/yoke/pkg/k8s"
 	"github.com/yokecd/yoke/pkg/k8s/ctrl"
 
 	kerrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime/schema"
 
 	"github.com/nestoca/joy/api/v1alpha1"
 	joy "github.com/nestoca/joy/pkg"
@@ -47,11 +45,7 @@ func ReleaseReconciler(params ReleaseReconcilerParams) ctrl.Funcs {
 			}
 
 			releaseCache := ctrl.CacheFromEvent[v1alpha1.Release](ctx, event)
-
-			releaseIntf := k8s.TypedInterface[v1alpha1.Release](
-				ctrl.Client(ctx),
-				schema.GroupVersionResource{Group: v1alpha1.Group, Version: v1alpha1.Version, Resource: "releases"},
-			).Namespace(event.Namespace)
+			releaseIntf := ctrl.Client(ctx).TypedInterface[v1alpha1.Release](v1alpha1.ReleaseGVR).Namespace(event.Namespace)
 
 			release, err := releaseCache.Get(event.Name)
 			if kerrors.IsNotFound(err) {
@@ -100,7 +94,7 @@ func ReleaseReconciler(params ReleaseReconcilerParams) ctrl.Funcs {
 				return ctrl.Result{}, nil
 			}
 
-			appIntf := k8s.TypedInterface[argocd.Application](ctrl.Client(ctx), argocd.ApplicationGVR).Namespace("argocd")
+			appIntf := ctrl.Client(ctx).TypedInterface[argocd.Application](argocd.ApplicationGVR).Namespace("argocd")
 
 			if isDeleted && shouldPrune {
 				if err := appIntf.Delete(ctx, appName(release), metav1.DeleteOptions{}); err != nil && !kerrors.IsNotFound(err) {

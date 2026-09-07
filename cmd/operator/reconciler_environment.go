@@ -6,7 +6,6 @@ import (
 
 	"github.com/davidmdm/x/xcontainer"
 
-	"github.com/yokecd/yoke/pkg/k8s"
 	"github.com/yokecd/yoke/pkg/k8s/ctrl"
 
 	corev1 "k8s.io/api/core/v1"
@@ -60,7 +59,7 @@ func EnvironmentReconciler(params EnvironmentReconcilerParams) ctrl.Funcs {
 				},
 			}
 
-			nsIntf := k8s.TypedInterface[corev1.Namespace](client, schema.GroupVersionResource{
+			nsIntf := client.TypedInterface[corev1.Namespace](schema.GroupVersionResource{
 				Version:  "v1",
 				Resource: "namespaces",
 			})
@@ -69,7 +68,7 @@ func EnvironmentReconciler(params EnvironmentReconcilerParams) ctrl.Funcs {
 				return ctrl.Result{}, fmt.Errorf("failed to apply namespace: %w", err)
 			}
 
-			appIntf := k8s.TypedInterface[argocd.Application](client, argocd.ApplicationGVR).Namespace("argocd")
+			appIntf := client.TypedInterface[argocd.Application](argocd.ApplicationGVR).Namespace("argocd")
 
 			if params.Pull {
 				if _, err := appIntf.Apply(
