@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"os"
 	"runtime"
 
 	"github.com/davidmdm/conf"
@@ -34,29 +33,30 @@ var defaultConcurrency = max(4, runtime.GOMAXPROCS(-1))
 func GetConfig() (Config, error) {
 	var cfg Config
 
-	conf.Var(conf.Environ, &cfg.EnvDestinations, "ENV_DESTINATIONS", conf.JSON[map[string]argocd.ApplicationDestination])
-	conf.Var(conf.Environ, &cfg.EnvSourcePattern, "ENV_SOURCE_PATTERN", conf.Default("environments/*/env.yaml"))
-	conf.Var(conf.Environ, &cfg.HelmLogin.Registry, "HELM_REGISTRY")
-	conf.Var(conf.Environ, &cfg.HelmLogin.User, "HELM_USER", conf.Default("_json_key"))
-	conf.Var(conf.Environ, &cfg.HelmLogin.CredentialsPath, "HELM_REGISTRY_CREDENTIALS_PATH")
-	conf.Var(conf.Environ, &cfg.ChartCacheDir, "CHART_CACHE_DIR", conf.RequiredNonEmpty[string]())
-	conf.Var(conf.Environ, &cfg.Concurrency, "CONCURRENCY", conf.Default(defaultConcurrency))
-	conf.Var(conf.Environ, &cfg.Pull, "PULL_MODE")
-	conf.Var(conf.Environ, &cfg.CatalogName, "DEFAULT_CATALOG", conf.Default("catalog"))
-	conf.Var(conf.Environ, &cfg.ServiceName, "SERVICE_NAME", conf.Default("joy-operator-dev"))
-	conf.Var(conf.Environ, &cfg.Streams, "STREAMS")
+	conf.Environ.Var(&cfg.EnvDestinations, "ENV_DESTINATIONS", conf.JSON[map[string]argocd.ApplicationDestination])
+	conf.Environ.Var(&cfg.EnvSourcePattern, "ENV_SOURCE_PATTERN", conf.Default("environments/*/env.yaml"))
+	conf.Environ.Var(&cfg.HelmLogin.Registry, "HELM_REGISTRY")
+	conf.Environ.Var(&cfg.HelmLogin.User, "HELM_USER", conf.Default("_json_key"))
+	conf.Environ.Var(&cfg.HelmLogin.CredentialsPath, "HELM_REGISTRY_CREDENTIALS_PATH")
+	conf.Environ.Var(&cfg.ChartCacheDir, "CHART_CACHE_DIR", conf.RequiredNonEmpty[string]())
+	conf.Environ.Var(&cfg.Concurrency, "CONCURRENCY", conf.Default(defaultConcurrency))
+	conf.Environ.Var(&cfg.Pull, "PULL_MODE")
+	conf.Environ.Var(&cfg.CatalogName, "DEFAULT_CATALOG", conf.Default("catalog"))
+	conf.Environ.Var(&cfg.ServiceName, "SERVICE_NAME", conf.Default("joy-operator-dev"))
+	conf.Environ.Var(&cfg.Streams, "STREAMS")
 
 	if err := conf.Environ.Parse(); err != nil {
 		return cfg, fmt.Errorf("failed to parse environment: %w", err)
 	}
 
-	cfg.Concurrency = max(cfg.Concurrency, 1)
+	fs := conf.MakeParser(conf.MustFSFromRootPath("/"))
+	fs.Var(&cfg.HelmLogin.Credentials, cfg.HelmLogin.CredentialsPath)
 
-	if cfg.HelmLogin.Registry != "" {
-		var err error
-		cfg.HelmLogin.Credentials, err = os.ReadFile(cfg.HelmLogin.CredentialsPath)
-		if err != nil {
-			return cfg, fmt.Errorf("failed to load helm registry credentials: %w", err)
+	if cfg.HelmLogin.CredentialsPath != "" {
+		fs := conf.MakeParser(conf.MustFSFromRootPath("/"))
+		fs.Var(&cfg.HelmLogin.Credentials, cfg.HelmLogin.CredentialsPath, conf.RequiredNonEmpty[[]byte]())
+		if err := fs.Parse(); err != nil {
+			return cfg, fmt.Errorf("failed to parse helm-login configuration: %w", err)
 		}
 	}
 

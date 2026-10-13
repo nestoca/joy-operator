@@ -452,7 +452,7 @@ func TestHappyReconciliations(t *testing.T) {
 			require.Equal(
 				t,
 				map[string]string{
-					"nesto.ca/release-version":                                        "1.2.3",
+					"nesto.ca/release-version": "1.2.3",
 					"notifications.argoproj.io/subscribe.on-production-release.slack": "notif-releases",
 					"notifications.argoproj.io/subscribe.on-release.slack":            "",
 				},
