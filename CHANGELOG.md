@@ -1,3 +1,12 @@
+# [0.8.0](https://github.com/nestoca/joy-operator/compare/v0.7.2...v0.8.0) (2026-10-13)
+
+
+### Features
+
+* **PLT-5890:** update to use go1.27 and update deps ([ad090b0](https://github.com/nestoca/joy-operator/commit/ad090b07f59d1cf43e0bea56c35bf22ac79c2917))
+
+
+
 ## [0.7.2](https://github.com/nestoca/joy-operator/compare/v0.7.1...v0.7.2) (2026-08-18)
 
 
