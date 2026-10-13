@@ -205,6 +205,8 @@ func renderReleaseApplication(params RenderApplicationParams) argocd.Application
 			Namespace:  "argocd",
 			Finalizers: []string{"resources-finalizer.argocd.argoproj.io"},
 			Labels: mergeMaps(
+				params.Release.Environment.Labels,
+				params.Release.Project.Labels,
 				params.Release.Labels,
 				map[string]string{
 					"nesto.ca/release": "true",
@@ -229,7 +231,7 @@ func renderReleaseApplication(params RenderApplicationParams) argocd.Application
 				},
 			),
 			Annotations: map[string]string{
-				"nesto.ca/release-version":                                        params.Release.Spec.Version,
+				"nesto.ca/release-version": params.Release.Spec.Version,
 				"notifications.argoproj.io/subscribe.on-production-release.slack": "notif-releases",
 				"notifications.argoproj.io/subscribe.on-release.slack":            params.Release.Annotations["nesto.ca/notifications-channel"],
 			},
