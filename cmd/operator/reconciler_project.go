@@ -5,10 +5,12 @@ import (
 	"fmt"
 	"slices"
 
-	"github.com/nestoca/joy/api/v1alpha1"
 	"github.com/yokecd/yoke/pkg/k8s/ctrl"
+
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
+
+	"github.com/nestoca/joy/api/v1alpha1"
 )
 
 func ProjectReconciler() ctrl.Funcs {
