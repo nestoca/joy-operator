@@ -205,3 +205,36 @@ subjects:
   - kind: ServiceAccount
     name: {{ $release }}
     namespace: {{ $releaseNamespace }}
+---
+# Helm registry secrets are read from the release namespace only.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: {{ $release }}-secrets
+  namespace: {{ $releaseNamespace }}
+  labels:
+    {{- if $values.commonLabels }}
+    {{- toYaml $values.commonLabels | nindent 4 }}
+    {{- end }}
+rules:
+  - apiGroups: [""]
+    resources: ["secrets"]
+    verbs: ["get", "list", "watch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: {{ $release }}-secrets
+  namespace: {{ $releaseNamespace }}
+  labels:
+    {{- if $values.commonLabels }}
+    {{- toYaml $values.commonLabels | nindent 4 }}
+    {{- end }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: {{ $release }}-secrets
+subjects:
+  - kind: ServiceAccount
+    name: {{ $release }}
+    namespace: {{ $releaseNamespace }}

@@ -252,6 +252,10 @@ spec:
     spec:
       containers:
         - env:
+            - name: SERVICE_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
             - name: SERVICE_NAME
               value: my-release
             - name: CHART_CACHE_DIR
@@ -541,6 +545,22 @@ rules:
       - delete
 ---
 apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  labels: null
+  name: my-release-secrets
+  namespace: my-namespace
+rules:
+  - apiGroups:
+      - ""
+    resources:
+      - secrets
+    verbs:
+      - get
+      - list
+      - watch
+---
+apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
   labels: null
@@ -550,6 +570,21 @@ roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: Role
   name: my-release-applications
+subjects:
+  - kind: ServiceAccount
+    name: my-release
+    namespace: my-namespace
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  labels: null
+  name: my-release-secrets
+  namespace: my-namespace
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: my-release-secrets
 subjects:
   - kind: ServiceAccount
     name: my-release
