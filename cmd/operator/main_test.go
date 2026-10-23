@@ -3,11 +3,12 @@ package main
 import (
 	"bytes"
 	"context"
-	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"maps"
+	"net/http"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -17,7 +18,9 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/require"
-	"go.yaml.in/yaml/v3"
+	"golang.org/x/crypto/bcrypt"
+
+	"k8s.io/apimachinery/pkg/util/yaml"
 
 	"github.com/yokecd/yoke/pkg/k8s"
 
@@ -27,8 +30,10 @@ import (
 	kerrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
+	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/client-go/tools/clientcmd"
 
+	internalhelm "github.com/nestoca/joy-operator/cmd/operator/helm"
 	"github.com/nestoca/joy/api/v1alpha1"
 	"github.com/nestoca/joy/pkg/helm"
 
@@ -42,7 +47,6 @@ type ChartArgs struct {
 	Image                    string                                   `json:"image"`
 	Version                  string                                   `json:"version"`
 	Controller               ControllerArgs                           `json:"controller"`
-	Helm                     *HelmArgs                                `json:"helm,omitzero"`
 	ExtraVolumes             []corev1.Volume                          `json:"extraVolumes,omitempty"`
 	ExtraVolumeMounts        []corev1.VolumeMount                     `json:"extraVolumeMounts,omitempty"`
 	EnvironmentDestinations  map[string]argocd.ApplicationDestination `json:"environmentDestinations,omitempty"`
@@ -53,20 +57,8 @@ type ControllerArgs struct {
 	Streams  []string `json:"streams"`
 }
 
-type HelmArgs struct {
-	Registry    string    `json:"registry"`
-	Credentials SecretRef `json:"credentials"`
-}
-
-type SecretRef struct {
-	Secret    string `json:"secret"`
-	Key       string `json:"key"`
-	MountPath string `json:"mountPath"`
-	Data      string `json:"-"`
-}
-
 func GetChartArgs() ChartArgs {
-	values := ChartArgs{
+	return ChartArgs{
 		Image:   joyOperator,
 		Version: "test",
 		Controller: ControllerArgs{
@@ -79,78 +71,13 @@ func GetChartArgs() ChartArgs {
 				Namespace: "default",
 			},
 		},
-		ExtraVolumes: func() (volumes []corev1.Volume) {
-			for _, name := range []string{"alpha", "beta"} {
-				volumes = append(volumes, corev1.Volume{
-					Name: "chart-" + name,
-					VolumeSource: corev1.VolumeSource{
-						HostPath: &corev1.HostPathVolumeSource{
-							Path: "/data/chart/" + name,
-							Type: new(corev1.HostPathDirectory),
-						},
-					},
-				})
-			}
-			return volumes
-		}(),
-		ExtraVolumeMounts: func() (mounts []corev1.VolumeMount) {
-			for _, name := range []string{"alpha", "beta"} {
-				mounts = append(mounts, corev1.VolumeMount{
-					Name:      "chart-" + name,
-					MountPath: "/data/chart/" + name,
-					ReadOnly:  true,
-				})
-			}
-			return mounts
-		}(),
 	}
-	if creds := os.Getenv("GAR_CREDS"); creds != "" {
-		values.Helm = &HelmArgs{
-			Registry: "northamerica-northeast1-docker.pkg.dev",
-			Credentials: SecretRef{
-				Secret:    "gar-creds",
-				Key:       "cred",
-				MountPath: "/secrets/creds/gar.creds",
-				Data:      creds,
-			},
-		}
-	}
-	return values
 }
 
 func TestMain(m *testing.M) {
 	must(withStdio(exec.Command("kind", "delete", "cluster", "--name=joy-operator")).Run())
+	must(withStdio(exec.Command("kind", "create", "cluster", "--name=joy-operator")).Run())
 
-	cwd := must2(os.Getwd())
-
-	must(
-		WithStandardInput(
-			withStdio(exec.Command("kind", "create", "cluster", "--name=joy-operator", "--config", "-")),
-			must2(
-				json.Marshal(
-					map[string]any{
-						"apiVersion": "kind.x-k8s.io/v1alpha4",
-						"kind":       "Cluster",
-						"nodes": []any{
-							map[string]any{
-								"role": "control-plane",
-								"extraMounts": []map[string]any{
-									{
-										"hostPath":      filepath.Join(cwd, "test_data/chart/alpha"),
-										"containerPath": "/data/chart/alpha",
-									},
-									{
-										"hostPath":      filepath.Join(must2(os.Getwd()), "test_data/chart/beta"),
-										"containerPath": "/data/chart/beta",
-									},
-								},
-							},
-						},
-					},
-				),
-			),
-		).Run(),
-	)
 	must(withStdio(exec.Command("docker", "build", "--tag=joy-operator:test", "../..")).Run())
 	must(withStdio(exec.Command("kind", "load", "docker-image", "joy-operator:test", "--name=joy-operator")).Run())
 
@@ -182,28 +109,6 @@ func TestMain(m *testing.M) {
 
 	values := GetChartArgs()
 
-	if helm := values.Helm; helm != nil {
-		must2(
-			client.Clientset.CoreV1().Secrets("default").Create(
-				context.Background(),
-				&corev1.Secret{
-					TypeMeta: metav1.TypeMeta{
-						Kind:       "Secret",
-						APIVersion: "v1",
-					},
-					ObjectMeta: metav1.ObjectMeta{
-						Name: helm.Credentials.Secret,
-					},
-					Data: map[string][]byte{
-						helm.Credentials.Key: must2(base64.StdEncoding.DecodeString(helm.Credentials.Data)),
-					},
-					Type: corev1.SecretTypeOpaque,
-				},
-				metav1.CreateOptions{},
-			),
-		)
-	}
-
 	must(
 		WithStandardInput(
 			withStdio(exec.Command("helm", "install", "joy-operator-tests", "../../chart", "-f", "-")),
@@ -224,6 +129,163 @@ func TestMain(m *testing.M) {
 			},
 		),
 	)
+
+	registrySecret := &corev1.Secret{
+		APIVersion: "v1",
+		Kind:       "Secret",
+		ObjectMeta: metav1.ObjectMeta{Name: "htpasswd", Namespace: "default"},
+		Data: map[string][]byte{"users.txt": func() []byte {
+			password, _ := bcrypt.GenerateFromPassword([]byte("password"), 10)
+			return append([]byte("username:"), password...)
+		}()},
+	}
+
+	registryDeployment := &appsv1.Deployment{
+		APIVersion: "apps/v1",
+		Kind:       "Deployment",
+		ObjectMeta: metav1.ObjectMeta{Name: "registry", Namespace: "default"},
+		Spec: appsv1.DeploymentSpec{
+			Replicas: new(int32(1)),
+			Selector: &metav1.LabelSelector{MatchLabels: map[string]string{"app": "registry"}},
+			Template: corev1.PodTemplateSpec{
+				ObjectMeta: metav1.ObjectMeta{
+					Labels: map[string]string{"app": "registry"},
+				},
+				Spec: corev1.PodSpec{
+					Containers: []corev1.Container{
+						{
+							Name:  "main",
+							Image: "registry:3",
+							Ports: []corev1.ContainerPort{
+								{
+									Name:          "http",
+									Protocol:      corev1.ProtocolTCP,
+									ContainerPort: 5000,
+								},
+							},
+							Env: []corev1.EnvVar{
+								{Name: "REGISTRY_AUTH", Value: "htpasswd"},
+								{Name: "REGISTRY_AUTH_HTPASSWD_REALM", Value: "Docker Registry"},
+								{Name: "REGISTRY_AUTH_HTPASSWD_PATH", Value: "/auth/htpasswd"},
+							},
+							VolumeMounts: []corev1.VolumeMount{
+								{
+									Name:      "htpasswd",
+									MountPath: "/auth/htpasswd",
+									SubPath:   "users.txt",
+								},
+							},
+						},
+					},
+					Volumes: []corev1.Volume{
+						{
+							Name: "htpasswd",
+							VolumeSource: corev1.VolumeSource{
+								Secret: &corev1.SecretVolumeSource{
+									SecretName: "htpasswd",
+									Optional:   new(false),
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+
+	registryService := &corev1.Service{
+		APIVersion: "v1",
+		Kind:       "Service",
+		ObjectMeta: metav1.ObjectMeta{Name: "registry", Namespace: "default"},
+		Spec: corev1.ServiceSpec{
+			Selector: registryDeployment.Spec.Selector.MatchLabels,
+			Ports: []corev1.ServicePort{
+				{
+					Name:       "http",
+					Port:       80,
+					TargetPort: intstr.FromInt(5000),
+				},
+			},
+		},
+	}
+
+	must(
+		WithStandardInputReader(
+			withStdio(exec.Command("kubectl", "apply", "-f", "-")),
+			func() io.Reader {
+				var buffer bytes.Buffer
+				enc := json.NewEncoder(&buffer)
+				enc.Encode(registrySecret)
+				enc.Encode(registryDeployment)
+				enc.Encode(registryService)
+				return &buffer
+			}(),
+		).Run(),
+	)
+
+	must(client.WaitForReady(context.Background(), registryDeployment, k8s.WaitOptions{Interval: time.Second, Timeout: 10 * time.Second}))
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	portForward := withStdio(exec.CommandContext(ctx, "kubectl", "port-forward", "svc/registry", "3000:80"))
+	must(portForward.Start())
+
+	// in CI it takes a lot more time for the service to be ready to accept connections.
+	maxAttempts := 50
+	for i := range maxAttempts {
+		fmt.Println("pinging registry at http://localhost:3000")
+		if _, err := http.Get("http://localhost:3000"); err != nil {
+			if i < maxAttempts-1 {
+				time.Sleep(100 * time.Millisecond)
+				continue
+			}
+			panic(fmt.Errorf("failed to connect to port-forward: %v", err))
+		}
+		break
+	}
+
+	must(withStdio(exec.Command("helm", "registry", "login", "--plain-http", "--username=username", "--password=password", "localhost:3000")).Run())
+
+	for _, pkg := range []string{"./alpha", "./beta"} {
+		pkgCmd := withStdio(exec.Command("helm", "package", pkg))
+		pkgCmd.Dir = "./test_data/chart"
+		must(pkgCmd.Run())
+
+		pushCmd := withStdio(exec.Command("helm", "push", "--plain-http", pkg+"-0.1.0.tgz", "oci://localhost:3000"))
+		pushCmd.Dir = "./test_data/chart"
+		must(pushCmd.Run())
+	}
+
+	cancel()
+	_ = portForward.Wait()
+
+	registryAuth := &corev1.Secret{
+		APIVersion: "v1",
+		Kind:       "Secret",
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "joy-auth",
+			Namespace: "default",
+			Labels:    map[string]string{"joy.nesto.ca/dockerconfigjson": "helm"},
+		},
+		Type: corev1.SecretTypeDockerConfigJson,
+		Data: map[string][]byte{
+			corev1.DockerConfigJsonKey: must2(
+				json.Marshal(
+					internalhelm.DockerConfig{
+						Auths: map[string]internalhelm.DockerAuth{
+							"registry:80": {
+								Username: "username",
+								Password: "password",
+							},
+						},
+					},
+				),
+			),
+		},
+	}
+
+	must2(client.Clientset.CoreV1().Secrets("default").Create(context.Background(), registryAuth, metav1.CreateOptions{}))
 
 	if ok, _ := strconv.ParseBool(os.Getenv("SETUP_ONLY")); ok {
 		os.Exit(0)
@@ -283,8 +345,8 @@ func TestHappyReconciliations(t *testing.T) {
 					Refs: map[string]helm.Chart{
 						"default": {
 							Name:     "alpha",
-							RepoURL:  "file:///data/chart",
-							Version:  "6.6.6",
+							RepoURL:  "oci://registry:80",
+							Version:  "0.1.0",
 							Mappings: map[string]any{},
 						},
 					},
@@ -461,8 +523,8 @@ func TestHappyReconciliations(t *testing.T) {
 			require.Equal(
 				t,
 				argocd.ApplicationSource{
-					RepoURL:        "file:///data/chart",
-					TargetRevision: "6.6.6",
+					RepoURL:        "oci://registry:80",
+					TargetRevision: "0.1.0",
 					Chart:          "alpha",
 					Helm: argocd.SourceHelm{
 						ReleaseName: "test",
@@ -770,8 +832,8 @@ func TestReleasePruning(t *testing.T) {
 					Refs: map[string]helm.Chart{
 						"default": {
 							Name:     "alpha",
-							RepoURL:  "file:///data/chart",
-							Version:  "6.6.6",
+							RepoURL:  "oci://registry:80",
+							Version:  "0.1.0",
 							Mappings: map[string]any{},
 						},
 					},
@@ -999,7 +1061,11 @@ func withStdio(cmd *exec.Cmd) *exec.Cmd {
 }
 
 func WithStandardInput(cmd *exec.Cmd, input []byte) *exec.Cmd {
-	cmd.Stdin = bytes.NewReader(input)
+	return WithStandardInputReader(cmd, bytes.NewReader(input))
+}
+
+func WithStandardInputReader(cmd *exec.Cmd, input io.Reader) *exec.Cmd {
+	cmd.Stdin = input
 	return cmd
 }
 

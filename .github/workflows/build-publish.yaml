@@ -36,13 +36,15 @@ jobs:
           go-version-file: go.mod
           cache: true
       - name: Install helm
-        run: curl -fsSL https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+        run: |
+          curl -fsSL https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+          helm version
       - name: Install kind
         run: |
           curl -Lo ./kind https://kind.sigs.k8s.io/dl/v0.30.0/kind-linux-amd64
           chmod +x ./kind && sudo mv ./kind /usr/local/bin/kind
       - name: Run tests
-        run: go test -v -timeout 10m ./...
+        run: go test -count 1 -p 1 -v -timeout 10m ./...
 
   # Publish only happens on master, and only once the tests above pass.
   publish:

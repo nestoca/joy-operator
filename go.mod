@@ -11,6 +11,7 @@ require (
 	github.com/stretchr/testify v1.12.1
 	github.com/yokecd/yoke v0.22.1
 	go.yaml.in/yaml/v3 v3.0.5
+	golang.org/x/crypto v0.56.0
 	k8s.io/api v0.37.1
 	k8s.io/apiextensions-apiserver v0.37.1
 	k8s.io/apimachinery v0.37.1
@@ -99,7 +100,6 @@ require (
 	go.opentelemetry.io/otel/metric v1.44.0 // indirect
 	go.opentelemetry.io/otel/trace v1.44.0 // indirect
 	go.yaml.in/yaml/v2 v2.4.4 // indirect
-	golang.org/x/crypto v0.56.0 // indirect
 	golang.org/x/mod v0.42.0 // indirect
 	golang.org/x/net v0.57.0 // indirect
 	golang.org/x/oauth2 v0.36.0 // indirect
