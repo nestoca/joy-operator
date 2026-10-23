@@ -54,6 +54,10 @@ spec:
             periodSeconds: 10
             timeoutSeconds: 1
           env:
+            - name: SERVICE_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
             - name: SERVICE_NAME
               value: {{ .Release.Name | quote }}
             - name: CHART_CACHE_DIR
@@ -62,16 +66,6 @@ spec:
               value: | {{- .Values.environmentDestinations | toJson | nindent 16 }}
             - name: ENV_SOURCE_PATTERN
               value: {{ .Values.environmentSourcePattern | quote }}
-            {{- if .Values.helm.registry }}
-            - name: HELM_REGISTRY
-              value: {{ .Values.helm.registry | quote }}
-            - name: HELM_REGISTRY_CREDENTIALS_PATH
-              value: {{ .Values.helm.credentials.mountPath | quote }}
-            {{- end }}
-            {{- with .Values.helm.user }}
-            - name: HELM_USER
-              value: {{ . | quote }}
-            {{- end }}
             {{- with .Values.controller.concurrency }}
             - name: CONCURRENCY
               value: {{ . | quote }}
@@ -93,12 +87,6 @@ spec:
               mountPath: /.config/helm
             - name: tmp
               mountPath: /tmp
-            {{- if .Values.helm.registry }}
-            - name: helm-credentials
-              mountPath: {{ .Values.helm.credentials.mountPath }}
-              subPath: {{ .Values.helm.credentials.key }}
-              readOnly: true
-            {{- end }}
             {{- with .Values.extraVolumeMounts }}
             {{- toYaml . | nindent 12 }}
             {{- end }}
@@ -110,14 +98,6 @@ spec:
           emptyDir: {}
         - name: tmp
           emptyDir: {}
-        {{- if .Values.helm.registry }}
-        - name: helm-credentials
-          secret:
-            secretName: {{ .Values.helm.credentials.secret }}
-            items:
-              - key: {{ .Values.helm.credentials.key }}
-                path: {{ .Values.helm.credentials.key }}
-        {{- end }}
         {{- with .Values.extraVolumes }}
         {{- toYaml . | nindent 8 }}
         {{- end }}

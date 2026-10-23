@@ -17,9 +17,9 @@ SHELL ["/bin/sh", "-o", "pipefail", "-c"]
 
 RUN \
   apk add perl-utils && \
-  wget https://get.helm.sh/helm-v3.18.5-linux-amd64.tar.gz -q && \
-  echo "9879bf9c471cdecbbee5ee17cf1de1849b0ffd12871ea01f17ede6861d7134f5  helm-v3.18.5-linux-amd64.tar.gz" | shasum -a256 --check - && \
-  tar -xzf helm-v3.18.5-linux-amd64.tar.gz && \
+  wget https://get.helm.sh/helm-v3.19.5-linux-amd64.tar.gz -q && \
+  echo "a0a5e8c592ed3f376ac110715eff214730c7422f9a44d96cf98117d2b8b0e6c0  helm-v3.19.5-linux-amd64.tar.gz" | shasum -a256 --check - && \
+  tar -xzf helm-v3.19.5-linux-amd64.tar.gz && \
   mv linux-amd64/helm /usr/local/bin
 
 COPY --from=builder /bin/joy-operator /usr/local/bin/joy-operator

@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bytes"
 	"context"
 	"errors"
 	"fmt"
@@ -9,7 +8,6 @@ import (
 	"maps"
 	"net/http"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"slices"
 	"sync"
@@ -52,17 +50,6 @@ func run() (err error) {
 		return fmt.Errorf("failed to get config: %w", err)
 	}
 
-	if cfg.HelmLogin.Registry != "" {
-		if err := AuthenticateHelm(ctx, cfg.HelmLogin); err != nil {
-			return fmt.Errorf("failed to authenticate helm: %w", err)
-		}
-		logger.Info(
-			"successfully authenticated to helm registry",
-			"registry", cfg.HelmLogin.Registry,
-			"user", cfg.HelmLogin.User,
-		)
-	}
-
 	restCfg, err := func() (*rest.Config, error) {
 		if cfg, err := rest.InClusterConfig(); err == nil {
 			return cfg, err
@@ -82,9 +69,15 @@ func run() (err error) {
 		return fmt.Errorf("failed to create kubernetes client: %w", err)
 	}
 
+	defer WatchRegistries(ctx, WatchRegistriesParams{
+		Client:    client,
+		Logger:    logger.With("component", "dockerconfig-watcher"),
+		Namespace: cfg.ServiceNamespace,
+	})()
+
 	controller := ctrl.NewController(ctrl.Params{
 		Client:      client,
-		Logger:      logger,
+		Logger:      logger.With("component", "controller"),
 		Concurrency: cfg.Concurrency,
 	})
 
@@ -188,19 +181,4 @@ func run() (err error) {
 	}()
 
 	return <-e
-}
-
-func AuthenticateHelm(ctx context.Context, params HelmLogin) error {
-	login := exec.CommandContext(ctx, "helm", "registry", "login", "-u", params.User, "--password-stdin", params.Registry)
-
-	var buffer bytes.Buffer
-	login.Stdout = &buffer
-	login.Stderr = &buffer
-	login.Stdin = bytes.NewReader(params.Credentials)
-
-	if err := login.Run(); err != nil {
-		return fmt.Errorf("%w: %q", err, &buffer)
-	}
-
-	return nil
 }
