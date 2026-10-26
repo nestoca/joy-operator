@@ -1,3 +1,12 @@
+# [0.9.0](https://github.com/nestoca/joy-operator/compare/v0.8.0...v0.9.0) (2026-10-26)
+
+
+### Features
+
+* **PLT-7345:** operator watches for helm registry secrets on startup ([2d5f772](https://github.com/nestoca/joy-operator/commit/2d5f7725e97d39bcef5b876884456128e296885c))
+
+
+
 # [0.8.0](https://github.com/nestoca/joy-operator/compare/v0.7.2...v0.8.0) (2026-10-13)
 
 
