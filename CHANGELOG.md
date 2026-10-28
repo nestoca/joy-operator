@@ -1,3 +1,13 @@
+# [0.10.0](https://github.com/nestoca/joy-operator/compare/v0.9.0...v0.10.0) (2026-10-28)
+
+
+### Features
+
+* **PLT-7433:** update deps ([b8eed6d](https://github.com/nestoca/joy-operator/commit/b8eed6d343acf7a82d74fa438c8d117eb386c0f0))
+* **PLT-7433:** update joy ([0f46cfe](https://github.com/nestoca/joy-operator/commit/0f46cfec0f26af31d659bf3935ba6c519f95c027))
+
+
+
 # [0.9.0](https://github.com/nestoca/joy-operator/compare/v0.8.0...v0.9.0) (2026-10-26)
 
 
