@@ -78,6 +78,10 @@ spec:
             - name: DEFAULT_CATALOG
               value: {{ . | quote }}
             {{- end }}
+            {{- with .Values.controller.revisionHistoryLimit }}
+            - name: APPLICATION_REVISION_HISTORY_LIMIT
+              value: {{ . | quote }}
+            {{- end }}
             - name: STREAMS
               value: {{ (default .Values.controller.streams list) | join "," | quote }}
           volumeMounts:

@@ -53,8 +53,9 @@ type ChartArgs struct {
 	EnvironmentSourcePattern string                                   `json:"environmentSourcePattern,omitempty"`
 }
 type ControllerArgs struct {
-	PullMode bool     `json:"pullMode"`
-	Streams  []string `json:"streams"`
+	PullMode             bool     `json:"pullMode"`
+	Streams              []string `json:"streams"`
+	RevisionHistoryLimit int      `json:"revisionHistoryLimit,omitempty"`
 }
 
 func GetChartArgs() ChartArgs {
@@ -62,8 +63,9 @@ func GetChartArgs() ChartArgs {
 		Image:   joyOperator,
 		Version: "test",
 		Controller: ControllerArgs{
-			PullMode: true,
-			Streams:  []string{"platform", "other"},
+			PullMode:             true,
+			Streams:              []string{"platform", "other"},
+			RevisionHistoryLimit: 3,
 		},
 		EnvironmentDestinations: map[string]argocd.ApplicationDestination{
 			"staging": {
@@ -498,6 +500,7 @@ func TestHappyReconciliations(t *testing.T) {
 		"staging-test": func(t *testing.T, app *argocd.Application) {
 			require.Equal(t, "argocd", app.Namespace)
 			require.Equal(t, "default", app.Spec.Project)
+			require.Equal(t, 3, app.Spec.RevisionHistoryLimit)
 			require.Equal(
 				t,
 				map[string]string{

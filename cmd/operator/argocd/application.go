@@ -24,10 +24,11 @@ var ApplicationGVR = schema.GroupVersionResource{
 }
 
 type ApplicationSpec struct {
-	Project     string                 `json:"project"`
-	Source      ApplicationSource      `json:"source"`
-	Destination ApplicationDestination `json:"destination"`
-	SyncPolicy  SyncPolicy             `json:"syncPolicy,omitzero"`
+	Project              string                 `json:"project"`
+	Source               ApplicationSource      `json:"source"`
+	Destination          ApplicationDestination `json:"destination"`
+	SyncPolicy           SyncPolicy             `json:"syncPolicy,omitzero"`
+	RevisionHistoryLimit int                    `json:"revisionHistoryLimit,omitzero"`
 }
 
 type ApplicationSource struct {
