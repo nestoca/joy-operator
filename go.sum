@@ -176,6 +176,8 @@ github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 h1:C3w9PqII01/Oq
 github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822/go.mod h1:+n7T8mK8HuQTcFwEeznm/DIxMOiR9yIdICNftLE1DvQ=
 github.com/nestoca/joy v0.100.0 h1:vdC3XnfAsabe0KwmFDhquxatxDHVAESGlwn9DamFZIA=
 github.com/nestoca/joy v0.100.0/go.mod h1:/RJ3tk/egrl2Ob/VkaadWK7st1P0Y6QP0642C5z0JsY=
+github.com/nestoca/joy v0.101.0 h1:v0qX/caoCYa1wH1jVurNmbKJY9T8L/bD27NLveRvXC0=
+github.com/nestoca/joy v0.101.0/go.mod h1:/RJ3tk/egrl2Ob/VkaadWK7st1P0Y6QP0642C5z0JsY=
 github.com/nestoca/survey/v2 v2.0.0 h1:orM/TXtBSQJCPiZy9N51hcwH0WzFjQJ7TQKCfMTnGoQ=
 github.com/nestoca/survey/v2 v2.0.0/go.mod h1:QfmcQfCRtqsiBpePFhHEW0MY9QH7lSpw3CQinsdC/dc=
 github.com/opencontainers/go-digest v1.0.0 h1:apOUWs51W5PlhuyGyz9FCeeBIOUDA/6nW8Oi/yOhh5U=
