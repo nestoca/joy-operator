@@ -1,3 +1,12 @@
+# [0.11.0](https://github.com/nestoca/joy-operator/compare/v0.10.0...v0.11.0) (2026-10-28)
+
+
+### Features
+
+* **PLT-7442:** support revision history limit ([8406a41](https://github.com/nestoca/joy-operator/commit/8406a41789e7f4784b94f22f07cda45cf2768a00))
+
+
+
 # [0.10.0](https://github.com/nestoca/joy-operator/compare/v0.9.0...v0.10.0) (2026-10-28)
 
 
