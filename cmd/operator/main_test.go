@@ -552,6 +552,7 @@ func TestHappyReconciliations(t *testing.T) {
 				},
 				app.Spec.SyncPolicy,
 			)
+			require.Equal(t, new(int64(3)), app.Spec.RevisionHistoryLimit)
 		},
 	}
 

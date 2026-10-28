@@ -250,6 +250,9 @@ func renderReleaseApplication(params RenderApplicationParams) argocd.Application
 				}(),
 			},
 			Project: cmp.Or(params.Release.Environment.Annotations["joy.nesto.ca/argocd.project"], "default"),
+			// Each history entry stores a full copy of the helm values. Keep few entries so the
+			// Application stays under the etcd object size limit.
+			RevisionHistoryLimit: new(int64(3)),
 			Source: argocd.ApplicationSource{
 				Chart:          params.Chart.Name,
 				RepoURL:        params.Chart.RepoURL,
