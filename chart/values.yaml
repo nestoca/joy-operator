@@ -33,6 +33,7 @@ controller: {}
   # pullMode: true
   # defaultCatalog: catalog
   # streams: [...stream-strings]
+  # revisionHistoryLimit: 10
 
 environmentDestinations: {}
 

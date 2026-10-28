@@ -10,15 +10,16 @@ import (
 )
 
 type Config struct {
-	CatalogName      string
-	ChartCacheDir    string
-	EnvDestinations  map[string]argocd.ApplicationDestination
-	EnvSourcePattern string
-	Concurrency      int
-	Pull             bool
-	ServiceName      string
-	Streams          []string
-	ServiceNamespace string
+	CatalogName                     string
+	ChartCacheDir                   string
+	EnvDestinations                 map[string]argocd.ApplicationDestination
+	EnvSourcePattern                string
+	Concurrency                     int
+	Pull                            bool
+	ServiceName                     string
+	Streams                         []string
+	ServiceNamespace                string
+	ApplicationRevisionHistoryLimit int
 }
 
 var defaultConcurrency = max(4, runtime.GOMAXPROCS(-1))
@@ -35,6 +36,7 @@ func GetConfig() (Config, error) {
 	conf.Environ.Var(&cfg.Streams, "STREAMS")
 	conf.Environ.Var(&cfg.ServiceName, "SERVICE_NAME", conf.Default("joy-operator-dev"))
 	conf.Environ.Var(&cfg.ServiceNamespace, "SERVICE_NAMESPACE", conf.RequiredNonEmpty[string]())
+	conf.Environ.Var(&cfg.ApplicationRevisionHistoryLimit, "APPLICATION_REVISION_HISTORY_LIMIT", conf.Default(3))
 
 	if err := conf.Environ.Parse(); err != nil {
 		return cfg, fmt.Errorf("failed to parse environment: %w", err)

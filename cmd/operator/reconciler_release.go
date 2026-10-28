@@ -28,10 +28,11 @@ type ChartSource struct {
 }
 
 type ReleaseReconcilerParams struct {
-	CatalogName     string
-	ChartSource     ChartSource
-	EnvDestinations map[string]argocd.ApplicationDestination
-	Streams         []string
+	CatalogName          string
+	ChartSource          ChartSource
+	EnvDestinations      map[string]argocd.ApplicationDestination
+	Streams              []string
+	RevisionHistoryLimit int
 }
 
 const finalizerPruneRelease = "joy.nesto.ca/prune-release"
@@ -139,11 +140,12 @@ func ReleaseReconciler(params ReleaseReconcilerParams) ctrl.Funcs {
 			}
 
 			app := renderReleaseApplication(RenderApplicationParams{
-				Release:     release,
-				Destination: destination,
-				Values:      valuesBytes,
-				Chart:       chartFS.Chart,
-				Streams:     params.Streams,
+				Release:              release,
+				Destination:          destination,
+				Values:               valuesBytes,
+				Chart:                chartFS.Chart,
+				Streams:              params.Streams,
+				RevisionHistoryLimit: params.RevisionHistoryLimit,
 			})
 
 			if _, err := appIntf.Apply(ctx, &app, metav1.ApplyOptions{FieldManager: joyOperator, Force: true}); err != nil {
@@ -156,11 +158,12 @@ func ReleaseReconciler(params ReleaseReconcilerParams) ctrl.Funcs {
 }
 
 type RenderApplicationParams struct {
-	Release     *v1alpha1.Release
-	Destination argocd.ApplicationDestination
-	Values      []byte
-	Chart       helm.Chart
-	Streams     []string
+	Release              *v1alpha1.Release
+	Destination          argocd.ApplicationDestination
+	Values               []byte
+	Chart                helm.Chart
+	Streams              []string
+	RevisionHistoryLimit int
 }
 
 func renderReleaseApplication(params RenderApplicationParams) argocd.Application {
@@ -249,7 +252,8 @@ func renderReleaseApplication(params RenderApplicationParams) argocd.Application
 					}
 				}(),
 			},
-			Project: cmp.Or(params.Release.Environment.Annotations["joy.nesto.ca/argocd.project"], "default"),
+			RevisionHistoryLimit: params.RevisionHistoryLimit,
+			Project:              cmp.Or(params.Release.Environment.Annotations["joy.nesto.ca/argocd.project"], "default"),
 			Source: argocd.ApplicationSource{
 				Chart:          params.Chart.Name,
 				RepoURL:        params.Chart.RepoURL,
