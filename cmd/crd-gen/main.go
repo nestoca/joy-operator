@@ -24,6 +24,9 @@ func main() {
 }
 
 func run() error {
+	fmt.Fprintln(os.Stdout, `{{- if .Values.installCRDs }}`)
+	defer fmt.Fprintln(os.Stdout, `{{- end }}`)
+
 	encoder := yaml.NewEncoder(os.Stdout)
 	encoder.SetIndent(2)
 
@@ -97,7 +100,9 @@ func run() error {
 						Name:    "v1alpha1",
 						Served:  true,
 						Storage: true,
-						Schema:  &apiextv1.CustomResourceValidation{OpenAPIV3Schema: sanitizeSchema(openapi.SchemaFrom(item.Type))},
+						Schema: &apiextv1.CustomResourceValidation{
+							OpenAPIV3Schema: sanitizeSchema(openapi.SchemaFrom(item.Type)),
+						},
 					},
 				},
 			},
@@ -119,7 +124,9 @@ func run() error {
 }
 
 func sanitizeSchema(schema *apiextv1.JSONSchemaProps) *apiextv1.JSONSchemaProps {
-	for _, prop := range []string{"apiVersion", "kind", "metadata"} {
+	// TODO: in a future version add back status to the schema once we revisit it.
+	// Currently there's a status object that should be reworked.
+	for _, prop := range []string{"apiVersion", "kind", "metadata", "status"} {
 		delete(schema.Properties, prop)
 	}
 	return schema
