@@ -33,9 +33,10 @@ import (
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/client-go/tools/clientcmd"
 
-	internalhelm "github.com/nestoca/joy-operator/cmd/operator/helm"
 	"github.com/nestoca/joy/api/v1alpha1"
 	"github.com/nestoca/joy/pkg/helm"
+
+	internalhelm "github.com/nestoca/joy-operator/cmd/operator/helm"
 
 	"github.com/nestoca/joy-operator/cmd/operator/argocd"
 )
