@@ -1,3 +1,12 @@
+# [0.12.0](https://github.com/nestoca/joy-operator/compare/v0.11.0...v0.12.0) (2026-11-27)
+
+
+### Features
+
+* **PLT-7698:** update joy crds ([76cfa94](https://github.com/nestoca/joy-operator/commit/76cfa944ee2ffdb70dc082672a852d55faabc204))
+
+
+
 # [0.11.0](https://github.com/nestoca/joy-operator/compare/v0.10.0...v0.11.0) (2026-10-28)
 
 
